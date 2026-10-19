@@ -10,33 +10,79 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClassesRouteImport } from './routes/classes'
+import { Route as EmploiDuTempsRouteImport } from './routes/emploi-du-temps'
+import { Route as EnseignantsRouteImport } from './routes/enseignants'
+import { Route as SallesRouteImport } from './routes/salles'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClassesRoute = ClassesRouteImport.update({
+  id: '/classes',
+  path: '/classes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmploiDuTempsRoute = EmploiDuTempsRouteImport.update({
+  id: '/emploi-du-temps',
+  path: '/emploi-du-temps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnseignantsRoute = EnseignantsRouteImport.update({
+  id: '/enseignants',
+  path: '/enseignants',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SallesRoute = SallesRouteImport.update({
+  id: '/salles',
+  path: '/salles',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/classes': typeof ClassesRoute
+  '/emploi-du-temps': typeof EmploiDuTempsRoute
+  '/enseignants': typeof EnseignantsRoute
+  '/salles': typeof SallesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/classes': typeof ClassesRoute
+  '/emploi-du-temps': typeof EmploiDuTempsRoute
+  '/enseignants': typeof EnseignantsRoute
+  '/salles': typeof SallesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/classes': typeof ClassesRoute
+  '/emploi-du-temps': typeof EmploiDuTempsRoute
+  '/enseignants': typeof EnseignantsRoute
+  '/salles': typeof SallesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/classes' | '/emploi-du-temps' | '/enseignants' | '/salles'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/classes' | '/emploi-du-temps' | '/enseignants' | '/salles'
+  id:
+    | '__root__'
+    | '/'
+    | '/classes'
+    | '/emploi-du-temps'
+    | '/enseignants'
+    | '/salles'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClassesRoute: typeof ClassesRoute
+  EmploiDuTempsRoute: typeof EmploiDuTempsRoute
+  EnseignantsRoute: typeof EnseignantsRoute
+  SallesRoute: typeof SallesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +94,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/classes': {
+      id: '/classes'
+      path: '/classes'
+      fullPath: '/classes'
+      preLoaderRoute: typeof ClassesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emploi-du-temps': {
+      id: '/emploi-du-temps'
+      path: '/emploi-du-temps'
+      fullPath: '/emploi-du-temps'
+      preLoaderRoute: typeof EmploiDuTempsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enseignants': {
+      id: '/enseignants'
+      path: '/enseignants'
+      fullPath: '/enseignants'
+      preLoaderRoute: typeof EnseignantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salles': {
+      id: '/salles'
+      path: '/salles'
+      fullPath: '/salles'
+      preLoaderRoute: typeof SallesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClassesRoute: ClassesRoute,
+  EmploiDuTempsRoute: EmploiDuTempsRoute,
+  EnseignantsRoute: EnseignantsRoute,
+  SallesRoute: SallesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
