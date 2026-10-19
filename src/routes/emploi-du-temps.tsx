@@ -16,7 +16,7 @@ export const Route = createFileRoute("/emploi-du-temps")({
 });
 
 function Timetable() {
-  const [cls, setCls] = useState(classes[0].name);
+  const [cls, setCls] = useState(classes[0]!.name);
   const grid = buildTimetable(cls);
   return (
     <AppShell>
@@ -51,7 +51,7 @@ function Timetable() {
               <tr key={slot}>
                 <td className="border-b p-3 align-top text-xs font-medium text-muted-foreground">{slot}</td>
                 {days.map((d, di) => {
-                  const l = grid[di][s];
+                  const l = grid[di]?.[s];
                   return (
                     <td key={d} className="h-20 border-b border-l p-1.5 align-top">
                       {l ? (

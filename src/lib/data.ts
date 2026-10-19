@@ -49,9 +49,9 @@ export function buildTimetable(className: string): Lesson[][] {
     slots.map((_, s) => {
       if (d === 2 && s >= 4) return null;
       if ((seed + d * 3 + s * 7) % 9 === 0) return null;
-      const subject = pattern[(seed + d * 5 + s) % pattern.length];
+      const subject = pattern[(seed + d * 5 + s) % pattern.length]!;
       const t = teachers.find((x) => x.subject === subject)!;
-      const room = subject === "eps" ? "Gymnase" : subject === "svt" || subject === "phy" ? "B201" : rooms[(d + s) % 2].name;
+      const room = subject === "eps" ? "Gymnase" : subject === "svt" || subject === "phy" ? "B201" : rooms[(d + s) % 2]!.name;
       return { subject, teacher: t.name, room };
     }),
   );
