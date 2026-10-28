@@ -21,7 +21,7 @@ function Dashboard() {
   const { classes, teachers, rooms, schedules } = useSchool();
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => { setNow(new Date()); const timer = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(timer); }, []);
-  const active = classes.filter((item) => now && schedules[item.name] && currentLesson(schedules[item.name].grid, now)).length;
+  const active = classes.filter((item) => { const schedule = schedules[item.name]; return now && schedule && currentLesson(schedule.grid, now); }).length;
   const stats = [
     { label: "Classes", value: classes.length, icon: GraduationCap, tone: "bg-accent text-accent-foreground" },
     { label: "Enseignants", value: teachers.length, icon: Users, tone: "bg-subject-math/10 text-subject-math" },

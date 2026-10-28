@@ -9,13 +9,17 @@ describe("Weekly timetables", () => {
   });
   it("shows the current class subject from its schedule in Paris time", () => {
     const grid = emptyTimetable();
-    grid[0][0] = { subject: "math", teacher: "Mme Laurent", room: "A101" };
+    const monday = grid[0];
+    if (!monday) throw new Error("Missing Monday");
+    monday[0] = { subject: "math", teacher: "Mme Laurent", room: "A101" };
     expect(currentLesson(grid, new Date("2026-10-26T07:30:00Z"))?.subject).toBe("math");
     expect(currentLesson(grid, new Date("2026-10-26T08:00:00Z"))).toBeNull();
   });
   it("shows no lesson on weekends or during lunch", () => {
     const grid = emptyTimetable();
-    grid[0][3] = { subject: "fr", teacher: "M. Durand", room: "A101" };
+    const monday = grid[0];
+    if (!monday) throw new Error("Missing Monday");
+    monday[3] = { subject: "fr", teacher: "M. Durand", room: "A101" };
     expect(currentLesson(grid, new Date("2026-10-26T11:30:00Z"))).toBeNull();
     expect(currentLesson(grid, new Date("2026-10-31T07:30:00Z"))).toBeNull();
   });

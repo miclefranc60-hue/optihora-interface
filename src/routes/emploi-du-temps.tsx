@@ -12,7 +12,7 @@ import { emptyTimetable } from "@/lib/timetable";
 import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/emploi-du-temps")({
-  validateSearch: (search: Record<string, unknown>) => ({ classe: typeof search.classe === "string" ? search.classe : "" }),
+  validateSearch: (search: Record<string, unknown>) => ({ classe: typeof search["classe"] === "string" ? search["classe"] : "" }),
   head: () => ({
     meta: [
       { property: "og:type", content: "website" },
