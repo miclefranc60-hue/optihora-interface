@@ -1,12 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { AppShell, PageHeader, PrimaryButton } from "@/components/AppShell";
-import { buildTimetable, days, slots, subjectById } from "@/lib/data";
+import { AppShell, PageHeader } from "@/components/AppShell";
+import { days, slots, subjectById } from "@/lib/data";
 
 import { useSchool } from "@/components/SchoolProvider";
 import { Button } from "@/components/ui/button";
 
+import { NewScheduleDialog } from "@/components/NewScheduleDialog";
+import { LessonDialog } from "@/components/LessonDialog";
+import { emptyTimetable } from "@/lib/timetable";
+import { Plus } from "lucide-react";
+
 export const Route = createFileRoute("/emploi-du-temps")({
+  validateSearch: (search: Record<string, unknown>) => ({ classe: typeof search["classe"] === "string" ? search["classe"] : "" }),
   head: () => ({
     meta: [
       { property: "og:type", content: "website" },
@@ -21,22 +27,27 @@ export const Route = createFileRoute("/emploi-du-temps")({
 });
 
 function Timetable() {
-  const { classes } = useSchool();
-  const [cls, setCls] = useState(classes[0]?.name ?? "");
-  const grid = buildTimetable(cls);
+  const { classes, schedules } = useSchool();
+  const { classe } = Route.useSearch();
+  const navigate = useNavigate();
+  const cls = classes.some((item) => item.name === classe) ? classe : classes[0]?.name ?? "";
+  const schedule = schedules[cls];
+  const grid = schedule?.grid ?? emptyTimetable();
+  const [editing, setEditing] = useState<{ day: number; slot: number } | null>(null);
   return (
     <AppShell>
       <PageHeader
         title="Emploi du temps"
-        subtitle="Semaine type · cliquez sur une classe pour changer de vue"
-        action={<PrimaryButton onClick={() => alert("Génération automatique lancée !")}>⚡ Générer automatiquement</PrimaryButton>}
+        subtitle={schedule?.name ?? "Aucun emploi du temps pour cette classe"}
+        action={<NewScheduleDialog />}
       />
       <div className="mb-6 flex flex-wrap gap-2">
         {classes.map((c) => (
           <Button
             key={c.name}
-            onClick={() => setCls(c.name)}
-            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${cls === c.name ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}
+            variant={cls === c.name ? "default" : "outline"}
+            onClick={() => { setEditing(null); void navigate({ to: "/emploi-du-temps", search: { classe: c.name } }); }}
+            className="px-4"
           >
             {c.name}
           </Button>
@@ -61,15 +72,18 @@ function Timetable() {
                   return (
                     <td key={d} className="h-20 border-b border-l p-1.5 align-top">
                       {l ? (
-                        <div
-                          className="h-full rounded-lg border-l-4 p-2"
+                        <Button
+                          variant="ghost"
+                          onClick={() => setEditing({ day: di, slot: s })}
+                          aria-label={`Modifier le cours ${d} à ${slot}`}
+                          className="h-full w-full flex-col items-start justify-start whitespace-normal rounded-lg border-l-4 p-2 text-left"
                           style={{ borderColor: subjectById(l.subject).color, background: `color-mix(in oklab, ${subjectById(l.subject).color} 14%, transparent)` }}
                         >
                           <p className="font-semibold">{subjectById(l.subject).name}</p>
                           <p className="text-xs text-muted-foreground">{l.teacher} · {l.room}</p>
-                        </div>
+                        </Button>
                       ) : (
-                        <div className="grid h-full place-items-center rounded-lg border border-dashed text-muted-foreground/50 hover:bg-muted">+</div>
+                        <Button variant="ghost" disabled={!schedule} onClick={() => setEditing({ day: di, slot: s })} aria-label={`Ajouter un cours ${d} à ${slot}`} className="h-full w-full border border-dashed text-muted-foreground"><Plus /></Button>
                       )}
                     </td>
                   );
@@ -79,6 +93,7 @@ function Timetable() {
           </tbody>
         </table>
       </div>
+      {editing && schedule && <LessonDialog key={`${cls}-${editing.day}-${editing.slot}`} className={cls} day={editing.day} slot={editing.slot} lesson={grid[editing.day]?.[editing.slot] ?? null} close={() => setEditing(null)} />}
     </AppShell>
   );
 }
