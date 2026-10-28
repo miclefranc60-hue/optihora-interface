@@ -16,7 +16,8 @@ export function currentLesson(grid: Lesson[][], date: Date) {
   });
   if (day < 0 || index < 0) return null;
   const lesson = grid[day]?.[index];
-  return lesson ? { ...lesson, slot: slots[index], end: `${String(Math.floor((minutes - (minutes % 60)) / 60)).padStart(2, "0")}` } : null;
+  const slot = slots[index];
+  return lesson && slot ? { ...lesson, slot } : null;
 }
 export function slotEnd(slot: string) {
   const [hour = 0, minute = 0] = slot.split(":").map(Number);
