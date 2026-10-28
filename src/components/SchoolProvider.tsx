@@ -10,9 +10,9 @@ type SchoolState = {
 };
 const SchoolContext = createContext<SchoolState | null>(null);
 export function SchoolProvider({ children }: { children: ReactNode }) {
-  const [classes, setClasses] = useState<SchoolClass[]>(initialClasses);
-  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachers);
-  const [rooms, setRooms] = useState<Room[]>(initialRooms);
+  const [classes, setClasses] = useState<SchoolClass[]>(() => classSchema.array().parse(initialClasses));
+  const [teachers, setTeachers] = useState<Teacher[]>(() => teacherSchema.array().parse(initialTeachers));
+  const [rooms, setRooms] = useState<Room[]>(() => roomSchema.array().parse(initialRooms));
   return <SchoolContext.Provider value={{ classes, teachers, rooms,
     addClass: (value) => {
       const record = classSchema.parse(value);
