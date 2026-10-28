@@ -18,10 +18,10 @@ export const Route = createFileRoute("/")({
   ] }), component: Dashboard,
 });
 function Dashboard() {
-  const { classes, teachers, rooms, schedules } = useSchool();
+  const { classes, teachers, rooms, schedules, settings } = useSchool();
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => { setNow(new Date()); const timer = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(timer); }, []);
-  const active = classes.filter((item) => { const schedule = schedules[item.name]; return now && schedule && currentLesson(schedule.grid, now); }).length;
+  const active = classes.filter((item) => { const schedule = schedules[item.name]; return now && schedule && currentLesson(schedule.grid, now, settings.duration); }).length;
   const stats = [
     { label: "Classes", value: classes.length, icon: GraduationCap, tone: "bg-accent text-accent-foreground" },
     { label: "Enseignants", value: teachers.length, icon: Users, tone: "bg-subject-math/10 text-subject-math" },
@@ -38,11 +38,11 @@ function Dashboard() {
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><h2 className="font-display text-xl font-semibold">En ce moment</h2><p className="mt-1 text-sm text-muted-foreground">Les matières en cours dans chaque classe</p></div><div className="flex items-center gap-2 text-sm text-muted-foreground"><Clock3 className="size-4" /><time>{now ? new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "long", hour: "2-digit", minute: "2-digit" }).format(now) : "—"}</time><span className="text-xs">Paris</span></div></div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{classes.map((item) => {
         const schedule = schedules[item.name];
-        const lesson = now && schedule ? currentLesson(schedule.grid, now) : null;
+        const lesson = now && schedule ? currentLesson(schedule.grid, now, settings.duration) : null;
         const subject = lesson ? subjectById(lesson.subject) : null;
         return <article key={item.name} className={`relative overflow-hidden rounded-lg border bg-card p-5 shadow-soft ${lesson ? "border-primary/30" : ""}`}>
           <div className="mb-5 flex items-center justify-between"><div className="flex items-baseline gap-2"><h3 className="font-display text-xl font-bold">{item.name}</h3><span className="text-xs text-muted-foreground">{item.level}</span></div><span className={`flex items-center gap-1.5 text-xs ${lesson ? "text-primary" : "text-muted-foreground"}`}><span className={`size-1.5 rounded-full ${lesson ? "bg-primary" : "bg-muted-foreground/40"}`} />{lesson ? "En cours" : "Sans cours"}</span></div>
-          <div className="min-h-24"><p className={`mb-2 flex items-center gap-2 text-lg font-semibold ${subject ? `subject-text-${subject.id}` : "text-muted-foreground"}`}><BookOpen className="size-4 shrink-0" />{subject?.name ?? (now ? schedule ? "Aucun cours actuellement" : "Emploi du temps à créer" : "—")}</p>{lesson ? <><p className="text-sm text-muted-foreground">{lesson.teacher} · {lesson.room}</p><p className="mt-2 text-xs text-muted-foreground">{lesson.slot} – {slotEnd(lesson.slot ?? "")}</p></> : <p className="text-sm text-muted-foreground">{item.students} élèves</p>}</div>
+          <div className="min-h-24"><p className={`mb-2 flex items-center gap-2 text-lg font-semibold ${subject ? `subject-text-${subject.id}` : "text-muted-foreground"}`}><BookOpen className="size-4 shrink-0" />{subject?.name ?? (now ? schedule ? "Aucun cours actuellement" : "Emploi du temps à créer" : "—")}</p>{lesson ? <><p className="text-sm text-muted-foreground">{lesson.teacher} · {lesson.room}</p><p className="mt-2 text-xs text-muted-foreground">{lesson.slot} – {slotEnd(lesson.slot, settings.duration)}</p></> : <p className="text-sm text-muted-foreground">{item.students} élèves</p>}</div>
           <div className="mt-3 flex items-center justify-between border-t pt-3"><span className="text-xs text-muted-foreground">{item.hours} h / semaine</span><Button asChild variant="ghost" size="sm"><Link to="/emploi-du-temps" search={{ classe: item.name }}>Voir la semaine<ArrowUpRight /></Link></Button></div>
         </article>;
       })}</div>

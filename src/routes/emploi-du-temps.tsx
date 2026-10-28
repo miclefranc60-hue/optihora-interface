@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
-import { days, slots, subjectById } from "@/lib/data";
+import { days, subjectById } from "@/lib/data";
+import { courseSlots, teacherUnavailable } from "@/lib/settings";
 
 import { useSchool } from "@/components/SchoolProvider";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,8 @@ export const Route = createFileRoute("/emploi-du-temps")({
 });
 
 function Timetable() {
-  const { classes, schedules } = useSchool();
+  const { classes, schedules, settings, constraints } = useSchool();
+  const slots = courseSlots(settings.duration);
   const { classe } = Route.useSearch();
   const navigate = useNavigate();
   const cls = classes.some((item) => item.name === classe) ? classe : classes[0]?.name ?? "";
@@ -81,6 +83,7 @@ function Timetable() {
                         >
                           <p className="font-semibold">{subjectById(l.subject).name}</p>
                           <p className="text-xs text-muted-foreground">{l.teacher} · {l.room}</p>
+                          {(teacherUnavailable(constraints, l.teacher, di, slot, settings.duration) || !settings.includedSubjects.includes(l.subject)) && <p className="text-xs text-destructive">À revoir</p>}
                         </Button>
                       ) : (
                         <Button variant="ghost" disabled={!schedule} onClick={() => setEditing({ day: di, slot: s })} aria-label={`Ajouter un cours ${d} à ${slot}`} className="h-full w-full border border-dashed text-muted-foreground"><Plus /></Button>

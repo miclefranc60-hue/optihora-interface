@@ -13,4 +13,7 @@
 - Reuse one addition dialog and shared validation schemas for classes, teachers and rooms to keep form behavior consistent.
 
 - Store per-class weekly schedules in the shared session provider; new schedules start empty and replacing one requires explicit confirmation.
-- Use the timetable class search parameter for selection and derive dashboard current lessons from the same grids using Europe/Paris time and half-open one-hour slots.
+- Use the timetable class search parameter for selection and derive dashboard current lessons from the same grids using Europe/Paris time and half-open intervals with the configured course duration.
+
+- Keep institution settings and weekly teacher unavailability in the shared session provider; validate lesson saves centrally and flag existing conflicts without silently deleting lessons.
+- Preserve eight slot indexes when changing duration; recalculate starts from 08:00, with afternoon starting no earlier than 13:30 and a minimum one-hour lunch break, so existing grids remain aligned.

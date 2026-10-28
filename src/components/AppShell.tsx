@@ -7,6 +7,7 @@ const tabs = [
   { to: "/classes", label: "Classes", icon: "◎" },
   { to: "/enseignants", label: "Enseignants", icon: "◉" },
   { to: "/salles", label: "Salles", icon: "▣" },
+  { to: "/parametres", label: "Paramètres", icon: "⚙" },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
