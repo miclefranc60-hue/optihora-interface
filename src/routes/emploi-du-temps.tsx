@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, PageHeader, PrimaryButton } from "@/components/AppShell";
-import { buildTimetable, classes, days, slots, subjectById } from "@/lib/data";
+import { buildTimetable, days, slots, subjectById } from "@/lib/data";
+
+import { useSchool } from "@/components/SchoolProvider";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/emploi-du-temps")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Emploi du temps — OptiHora" },
       { name: "description", content: "Visualisez et modifiez l'emploi du temps hebdomadaire de chaque classe." },
       { property: "og:title", content: "Emploi du temps — OptiHora" },
@@ -16,7 +21,8 @@ export const Route = createFileRoute("/emploi-du-temps")({
 });
 
 function Timetable() {
-  const [cls, setCls] = useState(classes[0]!.name);
+  const { classes } = useSchool();
+  const [cls, setCls] = useState(classes[0]?.name ?? "");
   const grid = buildTimetable(cls);
   return (
     <AppShell>
@@ -27,13 +33,13 @@ function Timetable() {
       />
       <div className="mb-6 flex flex-wrap gap-2">
         {classes.map((c) => (
-          <button
+          <Button
             key={c.name}
             onClick={() => setCls(c.name)}
             className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${cls === c.name ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}
           >
             {c.name}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="overflow-x-auto rounded-2xl border bg-card shadow-soft">

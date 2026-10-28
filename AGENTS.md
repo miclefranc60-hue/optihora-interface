@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep school records in a shared React provider above the routed pages for this UI-only prototype, so additions remain consistent during navigation without claiming durable storage.
+- Reuse one addition dialog and shared validation schemas for classes, teachers and rooms to keep form behavior consistent.

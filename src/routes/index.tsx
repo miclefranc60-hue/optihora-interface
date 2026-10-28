@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader, PrimaryButton } from "@/components/AppShell";
-import { classes, teachers, rooms, subjects } from "@/lib/data";
+import { subjects } from "@/lib/data";
+import { useSchool } from "@/components/SchoolProvider";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Tableau de bord — OptiHora" },
       { name: "description", content: "OptiHora : créez et gérez les emplois du temps de votre établissement scolaire." },
       { property: "og:title", content: "Tableau de bord — OptiHora" },
@@ -15,6 +18,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
+  const { classes, teachers, rooms } = useSchool();
   const stats = [
     { label: "Classes", value: classes.length },
     { label: "Enseignants", value: teachers.length },
@@ -46,7 +50,7 @@ function Dashboard() {
           <h2 className="mb-4 font-display text-lg font-semibold">Progression des emplois du temps</h2>
           <div className="space-y-4">
             {classes.map((c, i) => {
-              const pct = [100, 100, 85, 70, 30, 100][i];
+              const pct = [100, 100, 85, 70, 30, 100][i] ?? 0;
               return (
                 <div key={c.name}>
                   <div className="mb-1.5 flex justify-between text-sm">
