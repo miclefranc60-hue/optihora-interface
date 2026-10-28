@@ -3,6 +3,7 @@ import { classes as initialClasses, teachers as initialTeachers, rooms as initia
 import { classSchema, teacherSchema, roomSchema, ensureUniqueName, type SchoolClass, type Teacher, type Room } from "@/lib/school-records";
 import { buildTimetable, type Lesson } from "@/lib/data";
 import { emptyTimetable, type Schedule } from "@/lib/timetable";
+import { defaultSettings, settingsSchema, unavailabilitySchema, teacherUnavailable, courseSlots, type SchoolSettings, type Unavailability } from "@/lib/settings";
 
 type SchoolState = {
   classes: SchoolClass[]; teachers: Teacher[]; rooms: Room[];
@@ -12,23 +13,43 @@ type SchoolState = {
   schedules: Record<string, Schedule>;
   createSchedule: (className: string, name: string) => void;
   setLesson: (className: string, day: number, slot: number, lesson: Lesson) => void;
+  settings: SchoolSettings;
+  saveSettings: (value: SchoolSettings) => void;
+  constraints: Unavailability[];
+  addConstraint: (value: Unavailability) => void;
+  removeConstraint: (id: string) => void;
 };
 const SchoolContext = createContext<SchoolState | null>(null);
 export function SchoolProvider({ children }: { children: ReactNode }) {
   const [classes, setClasses] = useState<SchoolClass[]>(() => classSchema.array().parse(initialClasses));
   const [teachers, setTeachers] = useState<Teacher[]>(() => teacherSchema.array().parse(initialTeachers));
   const [rooms, setRooms] = useState<Room[]>(() => roomSchema.array().parse(initialRooms));
+  const [settings, setSettings] = useState<SchoolSettings>(defaultSettings);
+  const [constraints, setConstraints] = useState<Unavailability[]>([]);
   const [schedules, setSchedules] = useState<Record<string, Schedule>>(() => Object.fromEntries(initialClasses.map((item) => [item.name, { name: `Semaine type · ${item.name}`, grid: buildTimetable(item.name) }])));
-  return <SchoolContext.Provider value={{ classes, teachers, rooms, schedules,
+  return <SchoolContext.Provider value={{ classes, teachers, rooms, schedules, settings, constraints,
+    saveSettings: (value) => setSettings(settingsSchema.parse(value)),
+    addConstraint: (value) => {
+      const constraint = unavailabilitySchema.parse(value);
+      if (!teachers.some((teacher) => teacher.name === constraint.teacher)) throw new Error("Enseignant inconnu.");
+      setConstraints((previous) => [...previous, constraint]);
+    },
+    removeConstraint: (id) => setConstraints((previous) => previous.filter((constraint) => constraint.id !== id)),
     createSchedule: (className, name) => {
       if (!classes.some((item) => item.name === className) || !name.trim()) throw new Error("Choisissez une classe et un nom.");
       setSchedules((previous) => ({ ...previous, [className]: { name: name.trim(), grid: emptyTimetable() } }));
     },
-    setLesson: (className, day, slot, lesson) => setSchedules((previous) => {
+    setLesson: (className, day, slot, lesson) => {
+      const start = courseSlots(settings.duration)[slot];
+      if (!start || day < 0 || day > 4) throw new Error("Créneau invalide.");
+      if (lesson && !settings.includedSubjects.includes(lesson.subject)) throw new Error("Cette matière n’est pas incluse.");
+      if (lesson && teacherUnavailable(constraints, lesson.teacher, day, start, settings.duration)) throw new Error("Cet enseignant est indisponible sur ce créneau.");
+      setSchedules((previous) => {
       const schedule = previous[className];
       if (!schedule) return previous;
       return { ...previous, [className]: { ...schedule, grid: schedule.grid.map((row, d) => row.map((value, s) => d === day && s === slot ? lesson : value)) } };
-    }),
+      });
+    },
     addClass: (value) => {
       const record = classSchema.parse(value);
       ensureUniqueName(classes, record.name);
