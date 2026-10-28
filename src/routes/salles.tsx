@@ -1,19 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell, PageHeader, PrimaryButton } from "@/components/AppShell";
-import { rooms } from "@/lib/data";
+import { AppShell, PageHeader } from "@/components/AppShell";
+import { useSchool } from "@/components/SchoolProvider";
+
+import { AddRecordDialog } from "@/components/AddRecordDialog";
 
 export const Route = createFileRoute("/salles")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Salles — OptiHora" },
       { name: "description", content: "Suivez les salles de l'établissement et leur taux d'occupation." },
       { property: "og:title", content: "Salles — OptiHora" },
       { property: "og:description", content: "Salles, capacités et occupation." },
     ],
   }),
-  component: () => (
+  component: RecordsPage,
+});
+
+function RecordsPage() {
+  const { rooms } = useSchool();
+  return (
     <AppShell>
-      <PageHeader title="Salles" subtitle="Capacité et taux d'occupation hebdomadaire" action={<PrimaryButton>+ Ajouter une salle</PrimaryButton>} />
+      <PageHeader title="Salles" subtitle="Capacité et taux d'occupation hebdomadaire" action={<AddRecordDialog kind="room" />} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {rooms.map((r) => (
           <div key={r.name} className="rounded-2xl border bg-card p-6 shadow-soft">
@@ -27,5 +36,5 @@ export const Route = createFileRoute("/salles")({
         ))}
       </div>
     </AppShell>
-  ),
-});
+  );
+}
