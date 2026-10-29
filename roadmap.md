@@ -5,3 +5,4 @@
 - [x] Création et saisie d’un nouvel emploi du temps pendant la session
 - [x] Paramètres : durée des cours, matières incluses et indisponibilités hebdomadaires des enseignants
 - [x] Appliquer les paramètres aux grilles et à la saisie des cours, avec tests
+- [x] Ajouter des matières personnalisées et les proposer aux enseignants et aux cours

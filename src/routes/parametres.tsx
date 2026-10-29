@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { subjects, days } from "@/lib/data";
+import { days } from "@/lib/data";
+import { subjectTextClass } from "@/lib/subjects";
 import { settingsSchema, unavailabilitySchema, courseSlots, teacherUnavailable } from "@/lib/settings";
 
 export const Route = createFileRoute("/parametres")({
@@ -21,7 +22,10 @@ export const Route = createFileRoute("/parametres")({
   ] }), component: SettingsPage,
 });
 function SettingsPage() {
-  const { settings, saveSettings, teachers, constraints, addConstraint, removeConstraint, schedules } = useSchool();
+  const { settings, saveSettings, teachers, constraints, addConstraint, removeConstraint, schedules, subjects, addSubject } = useSchool();
+  const [subjectName, setSubjectName] = useState("");
+  const [subjectError, setSubjectError] = useState("");
+  const [subjectAdded, setSubjectAdded] = useState("");
   const [duration, setDuration] = useState(String(settings.duration));
   const [included, setIncluded] = useState(settings.includedSubjects);
   const [teacher, setTeacher] = useState(teachers[0]?.name ?? "");
@@ -55,7 +59,16 @@ function SettingsPage() {
       </section>
       <section className="grid gap-6 border-t py-7 lg:grid-cols-[280px_1fr]">
         <div><h2 className="flex items-center gap-2 font-display text-lg font-semibold"><BookOpen className="size-5 text-primary" />Matières incluses</h2><p className="mt-2 text-sm text-muted-foreground">{included.length} matière{included.length > 1 ? "s" : ""} sélectionnée{included.length > 1 ? "s" : ""}</p></div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{subjects.map((subject) => <div key={subject.id} className="flex items-center gap-3 rounded-lg border bg-card p-4"><Checkbox id={`included-${subject.id}`} checked={included.includes(subject.id)} onCheckedChange={(checked) => { setSaved(false); setIncluded((previous) => checked === true ? [...previous, subject.id] : previous.filter((id) => id !== subject.id)); }} /><Label htmlFor={`included-${subject.id}`} className={`leading-5 subject-text-${subject.id}`}>{subject.name}</Label></div>)}</div>
+        <div className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{subjects.map((subject) => <div key={subject.id} className="flex min-w-0 items-center gap-3 rounded-lg border bg-card p-4"><Checkbox id={`included-${subject.id}`} checked={included.includes(subject.id)} onCheckedChange={(checked) => { setSaved(false); setIncluded((previous) => checked === true ? [...previous, subject.id] : previous.filter((id) => id !== subject.id)); }} /><Label htmlFor={`included-${subject.id}`} className={`min-w-0 break-words leading-5 ${subjectTextClass(subject.id)}`}>{subject.name}</Label></div>)}</div>
+          <div className="flex flex-wrap items-end gap-3 border-t pt-5"><div className="min-w-0 flex-1 space-y-2"><Label htmlFor="new-subject">Nom de la nouvelle matière</Label><Input id="new-subject" maxLength={100} value={subjectName} onChange={(event) => { setSubjectName(event.target.value); setSubjectError(""); setSubjectAdded(""); }} placeholder="Ex. : Technologie" onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); document.getElementById("add-subject")?.click(); } }} /></div><Button id="add-subject" type="button" disabled={!subjectName.trim()} onClick={() => {
+            setSubjectError(""); setSubjectAdded("");
+            try { const subject = addSubject(subjectName); setIncluded((previous) => [...previous, subject.id]); setSubjectName(""); setSaved(false); setSubjectAdded(`${subject.name} ajoutée pour cette session.`); }
+            catch (error) { setSubjectError(error instanceof Error ? error.message : "Impossible d’ajouter cette matière."); }
+          }}><Plus />Ajouter une matière</Button></div>
+          {subjectError && <p role="alert" className="text-sm text-destructive">{subjectError}</p>}
+          {subjectAdded && <p role="status" className="flex items-center gap-2 text-sm text-primary"><Check className="size-4" />{subjectAdded}</p>}
+        </div>
       </section>
       <div className="flex flex-wrap items-center justify-end gap-4 border-t py-5">{error && <p role="alert" className="text-sm text-destructive">{error}</p>}{saved && <p role="status" className="flex items-center gap-2 text-sm text-primary"><Check className="size-4" />Paramètres enregistrés pour cette session</p>}<Button type="submit"><Save />Enregistrer les paramètres</Button></div>
     </form>
