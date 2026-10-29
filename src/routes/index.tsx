@@ -4,7 +4,7 @@ import { ArrowUpRight, BookOpen, Clock3, DoorOpen, GraduationCap, Users, Calenda
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { NewScheduleDialog } from "@/components/NewScheduleDialog";
-import { subjectById } from "@/lib/data";
+import { subjectTextClass } from "@/lib/subjects";
 import { useSchool } from "@/components/SchoolProvider";
 import { currentLesson, slotEnd } from "@/lib/timetable";
 
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
   ] }), component: Dashboard,
 });
 function Dashboard() {
-  const { classes, teachers, rooms, schedules, settings } = useSchool();
+  const { classes, teachers, rooms, schedules, settings, subjectById } = useSchool();
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => { setNow(new Date()); const timer = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(timer); }, []);
   const active = classes.filter((item) => { const schedule = schedules[item.name]; return now && schedule && currentLesson(schedule.grid, now, settings.duration); }).length;
@@ -42,7 +42,7 @@ function Dashboard() {
         const subject = lesson ? subjectById(lesson.subject) : null;
         return <article key={item.name} className={`relative overflow-hidden rounded-lg border bg-card p-5 shadow-soft ${lesson ? "border-primary/30" : ""}`}>
           <div className="mb-5 flex items-center justify-between"><div className="flex items-baseline gap-2"><h3 className="font-display text-xl font-bold">{item.name}</h3><span className="text-xs text-muted-foreground">{item.level}</span></div><span className={`flex items-center gap-1.5 text-xs ${lesson ? "text-primary" : "text-muted-foreground"}`}><span className={`size-1.5 rounded-full ${lesson ? "bg-primary" : "bg-muted-foreground/40"}`} />{lesson ? "En cours" : "Sans cours"}</span></div>
-          <div className="min-h-24"><p className={`mb-2 flex items-center gap-2 text-lg font-semibold ${subject ? `subject-text-${subject.id}` : "text-muted-foreground"}`}><BookOpen className="size-4 shrink-0" />{subject?.name ?? (now ? schedule ? "Aucun cours actuellement" : "Emploi du temps à créer" : "—")}</p>{lesson ? <><p className="text-sm text-muted-foreground">{lesson.teacher} · {lesson.room}</p><p className="mt-2 text-xs text-muted-foreground">{lesson.slot} – {slotEnd(lesson.slot, settings.duration)}</p></> : <p className="text-sm text-muted-foreground">{item.students} élèves</p>}</div>
+          <div className="min-h-24"><p className={`mb-2 flex items-center gap-2 text-lg font-semibold ${subject ? subjectTextClass(subject.id) : "text-muted-foreground"}`}><BookOpen className="size-4 shrink-0" />{subject?.name ?? (now ? schedule ? "Aucun cours actuellement" : "Emploi du temps à créer" : "—")}</p>{lesson ? <><p className="text-sm text-muted-foreground">{lesson.teacher} · {lesson.room}</p><p className="mt-2 text-xs text-muted-foreground">{lesson.slot} – {slotEnd(lesson.slot, settings.duration)}</p></> : <p className="text-sm text-muted-foreground">{item.students} élèves</p>}</div>
           <div className="mt-3 flex items-center justify-between border-t pt-3"><span className="text-xs text-muted-foreground">{item.hours} h / semaine</span><Button asChild variant="ghost" size="sm"><Link to="/emploi-du-temps" search={{ classe: item.name }}>Voir la semaine<ArrowUpRight /></Link></Button></div>
         </article>;
       })}</div>

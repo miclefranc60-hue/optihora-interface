@@ -7,7 +7,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { useSchool } from "@/components/SchoolProvider";
-import { subjects } from "@/lib/data";
 import { classSchema, teacherSchema, roomSchema } from "@/lib/school-records";
 
 type Kind = "class" | "teacher" | "room";
@@ -62,7 +61,7 @@ export function AddRecordDialog({ kind }: { kind: Kind }) {
             <Field id={`${id}-main`} label="Professeur principal"><Choice id={`${id}-main`} value={mainTeacher} onChange={setMainTeacher} items={[{ value: "none", label: "Non attribué" }, ...school.teachers.map((teacher) => ({ value: teacher.name, label: teacher.name }))]} /></Field>
           </>}
           {kind === "teacher" && <>
-            <Field id={`${id}-subject`} label="Matière"><Choice id={`${id}-subject`} value={subject} onChange={setSubject} items={subjects.map((item) => ({ value: item.id, label: item.name }))} /></Field>
+            <Field id={`${id}-subject`} label="Matière"><Choice id={`${id}-subject`} value={subject} onChange={setSubject} items={school.subjects.map((item) => ({ value: item.id, label: item.name }))} /></Field>
             <Field id={`${id}-hours`} label="Heures / semaine"><Input id={`${id}-hours`} type="number" required min={0} step={1} value={hours} onChange={(event) => setHours(event.target.value)} /></Field>
             <fieldset><legend className="mb-3 text-sm font-medium">Classes attribuées</legend><div className="grid grid-cols-2 gap-3">{school.classes.map((item, index) => <div key={item.name} className="flex items-center gap-2"><Checkbox id={`${id}-class-${index}`} checked={selectedClasses.includes(item.name)} onCheckedChange={(checked) => setSelectedClasses((previous) => checked === true ? [...previous, item.name] : previous.filter((value) => value !== item.name))} /><Label htmlFor={`${id}-class-${index}`}>{item.name}</Label></div>)}</div></fieldset>
           </>}

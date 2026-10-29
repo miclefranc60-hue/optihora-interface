@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
-import { subjectById } from "@/lib/data";
 import { useSchool } from "@/components/SchoolProvider";
 
 import { AddRecordDialog } from "@/components/AddRecordDialog";
@@ -20,7 +19,7 @@ export const Route = createFileRoute("/enseignants")({
 });
 
 function RecordsPage() {
-  const { teachers } = useSchool();
+  const { teachers, subjectById } = useSchool();
   return (
     <AppShell>
       <PageHeader title="Enseignants" subtitle={`${teachers.length} enseignants`} action={<AddRecordDialog kind="teacher" />} />

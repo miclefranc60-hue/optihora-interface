@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
-import { days, subjectById } from "@/lib/data";
+import { days } from "@/lib/data";
 import { courseSlots, teacherUnavailable } from "@/lib/settings";
 
 import { useSchool } from "@/components/SchoolProvider";
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/emploi-du-temps")({
 });
 
 function Timetable() {
-  const { classes, schedules, settings, constraints } = useSchool();
+  const { classes, schedules, settings, constraints, subjectById } = useSchool();
   const slots = courseSlots(settings.duration);
   const { classe } = Route.useSearch();
   const navigate = useNavigate();
