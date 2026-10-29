@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { classes as initialClasses, teachers as initialTeachers, rooms as initialRooms } from "@/lib/data";
 import { classSchema, teacherSchema, roomSchema, ensureUniqueName, type SchoolClass, type Teacher, type Room } from "@/lib/school-records";
-import { buildTimetable, type Lesson } from "@/lib/data";
+import { buildTimetable, subjects as initialSubjects, type Subject, type Lesson } from "@/lib/data";
+import { createSubject, findSubject } from "@/lib/subjects";
 import { emptyTimetable, type Schedule } from "@/lib/timetable";
 import { defaultSettings, settingsSchema, unavailabilitySchema, teacherUnavailable, courseSlots, type SchoolSettings, type Unavailability } from "@/lib/settings";
 
@@ -18,6 +19,9 @@ type SchoolState = {
   constraints: Unavailability[];
   addConstraint: (value: Unavailability) => void;
   removeConstraint: (id: string) => void;
+  subjects: Subject[];
+  addSubject: (name: string) => Subject;
+  subjectById: (id: string) => Subject;
 };
 const SchoolContext = createContext<SchoolState | null>(null);
 export function SchoolProvider({ children }: { children: ReactNode }) {
@@ -25,10 +29,22 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   const [teachers, setTeachers] = useState<Teacher[]>(() => teacherSchema.array().parse(initialTeachers));
   const [rooms, setRooms] = useState<Room[]>(() => roomSchema.array().parse(initialRooms));
   const [settings, setSettings] = useState<SchoolSettings>(defaultSettings);
+  const [subjects, setSubjects] = useState<Subject[]>(initialSubjects);
   const [constraints, setConstraints] = useState<Unavailability[]>([]);
   const [schedules, setSchedules] = useState<Record<string, Schedule>>(() => Object.fromEntries(initialClasses.map((item) => [item.name, { name: `Semaine type · ${item.name}`, grid: buildTimetable(item.name) }])));
-  return <SchoolContext.Provider value={{ classes, teachers, rooms, schedules, settings, constraints,
-    saveSettings: (value) => setSettings(settingsSchema.parse(value)),
+  return <SchoolContext.Provider value={{ classes, teachers, rooms, schedules, settings, constraints, subjects,
+    subjectById: (id) => findSubject(subjects, id),
+    addSubject: (name) => {
+      const subject = createSubject(subjects, name, `custom-${crypto.randomUUID()}`);
+      setSubjects((previous) => [...previous, subject]);
+      setSettings((previous) => ({ ...previous, includedSubjects: [...previous.includedSubjects, subject.id] }));
+      return subject;
+    },
+    saveSettings: (value) => {
+      const parsed = settingsSchema.parse(value);
+      if (parsed.includedSubjects.some((id) => !subjects.some((subject) => subject.id === id))) throw new Error("Matière inconnue.");
+      setSettings(parsed);
+    },
     addConstraint: (value) => {
       const constraint = unavailabilitySchema.parse(value);
       if (!teachers.some((teacher) => teacher.name === constraint.teacher)) throw new Error("Enseignant inconnu.");
@@ -58,6 +74,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     },
     addTeacher: (value) => {
       const record = teacherSchema.parse(value);
+      if (!subjects.some((subject) => subject.id === record.subject)) throw new Error("Matière inconnue.");
       ensureUniqueName(teachers, record.name);
       setTeachers((previous) => [...previous, record]);
     },
