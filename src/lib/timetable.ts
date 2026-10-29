@@ -24,3 +24,8 @@ export function currentLesson(grid: Lesson[][], date: Date, duration = 60) {
 export function slotEnd(slot: string, duration = 60) {
   return timeAt(minutesOf(slot) + duration);
 }
+export function currentTeacherClasses(schedules: Record<string, Schedule>, teacher: string, date: Date, duration = 60): string[] {
+  return Object.entries(schedules)
+    .filter(([, schedule]) => currentLesson(schedule.grid, date, duration)?.teacher === teacher)
+    .map(([className]) => className);
+}
