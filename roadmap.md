@@ -6,3 +6,4 @@
 - [x] Paramètres : durée des cours, matières incluses et indisponibilités hebdomadaires des enseignants
 - [x] Appliquer les paramètres aux grilles et à la saisie des cours, avec tests
 - [x] Ajouter des matières personnalisées et les proposer aux enseignants et aux cours
+- [ ] Bloquer les cours simultanés d’un enseignant et signaler les conflits existants, sans supprimer de cours

@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { days } from "@/lib/data";
 import { subjectTextClass } from "@/lib/subjects";
+import { teacherScheduleConflicts } from "@/lib/timetable";
 import { settingsSchema, unavailabilitySchema, courseSlots, teacherUnavailable } from "@/lib/settings";
 
 export const Route = createFileRoute("/parametres")({
@@ -43,7 +44,9 @@ function SettingsPage() {
     if (!lesson || !slot) return [];
     const unavailable = teacherUnavailable(constraints, lesson.teacher, d, slot, settings.duration);
     const excluded = !settings.includedSubjects.includes(lesson.subject);
-    return unavailable || excluded ? [{ className, day: d, slot, teacher: lesson.teacher, issue: unavailable ? "Enseignant indisponible" : "Matière exclue" }] : [];
+    const busyClasses = teacherScheduleConflicts(schedules, className, lesson.teacher, d, s);
+    const issues = [unavailable ? "Enseignant indisponible" : "", excluded ? "Matière exclue" : "", busyClasses.length ? `Cours simultané avec ${busyClasses.join(", ")}` : ""].filter(Boolean);
+    return issues.length ? [{ className, day: d, slot, teacher: lesson.teacher, issue: issues.join(" · ") }] : [];
   })));
   return <AppShell>
     <PageHeader title="Paramètres" subtitle="Organisation de l’établissement" />

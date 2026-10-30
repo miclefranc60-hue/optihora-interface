@@ -3,7 +3,7 @@ import { classes as initialClasses, teachers as initialTeachers, rooms as initia
 import { classSchema, teacherSchema, roomSchema, ensureUniqueName, type SchoolClass, type Teacher, type Room } from "@/lib/school-records";
 import { buildTimetable, subjects as initialSubjects, type Subject, type Lesson } from "@/lib/data";
 import { createSubject, findSubject } from "@/lib/subjects";
-import { emptyTimetable, type Schedule } from "@/lib/timetable";
+import { emptyTimetable, updateScheduleLesson, type Schedule } from "@/lib/timetable";
 import { defaultSettings, settingsSchema, unavailabilitySchema, teacherUnavailable, courseSlots, type SchoolSettings, type Unavailability } from "@/lib/settings";
 
 type SchoolState = {
@@ -60,11 +60,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       if (!start || day < 0 || day > 4) throw new Error("Créneau invalide.");
       if (lesson && !settings.includedSubjects.includes(lesson.subject)) throw new Error("Cette matière n’est pas incluse.");
       if (lesson && teacherUnavailable(constraints, lesson.teacher, day, start, settings.duration)) throw new Error("Cet enseignant est indisponible sur ce créneau.");
-      setSchedules((previous) => {
-      const schedule = previous[className];
-      if (!schedule) return previous;
-      return { ...previous, [className]: { ...schedule, grid: schedule.grid.map((row, d) => row.map((value, s) => d === day && s === slot ? lesson : value)) } };
-      });
+      setSchedules(updateScheduleLesson(schedules, className, day, slot, lesson));
     },
     addClass: (value) => {
       const record = classSchema.parse(value);

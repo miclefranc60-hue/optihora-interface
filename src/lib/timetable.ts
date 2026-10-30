@@ -2,6 +2,21 @@ import { days, slots, type Lesson } from "@/lib/data";
 import { courseSlots, minutesOf, timeAt } from "@/lib/settings";
 
 export type Schedule = { name: string; grid: Lesson[][] };
+export function teacherScheduleConflicts(schedules: Record<string, Schedule>, className: string, teacher: string, day: number, slot: number): string[] {
+  if (!teacher) return [];
+  return Object.entries(schedules)
+    .filter(([otherClass, schedule]) => otherClass !== className && schedule.grid[day]?.[slot]?.teacher === teacher)
+    .map(([otherClass]) => otherClass);
+}
+export function updateScheduleLesson(schedules: Record<string, Schedule>, className: string, day: number, slot: number, lesson: Lesson): Record<string, Schedule> {
+  const schedule = schedules[className];
+  if (!schedule) throw new Error("Emploi du temps inconnu.");
+  if (lesson) {
+    const conflicts = teacherScheduleConflicts(schedules, className, lesson.teacher, day, slot);
+    if (conflicts.length) throw new Error(`Cet enseignant a déjà un cours avec ${conflicts.join(", ")} sur ce créneau.`);
+  }
+  return { ...schedules, [className]: { ...schedule, grid: schedule.grid.map((row, d) => row.map((value, s) => d === day && s === slot ? lesson : value)) } };
+}
 export const emptyTimetable = (): Lesson[][] => days.map(() => slots.map(() => null));
 export function parisTime(date: Date) {
   const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(date);
