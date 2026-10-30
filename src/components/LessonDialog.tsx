@@ -19,7 +19,7 @@ export function LessonDialog({ className, day, slot, lesson, close }: { classNam
   const [error, setError] = useState("");
   const eligible = teachers.filter((item) => item.subject === subject);
   const unavailable = teacherUnavailable(constraints, teacher, day, slots[slot] ?? "00:00", settings.duration);
-  const conflicts = teacherScheduleConflicts(schedules, className, teacher, day, slot);
+  const conflicts = teacherScheduleConflicts(schedules, className, teacher, day, slot, settings.allowSimultaneousLessons);
   const valid = Boolean(settings.includedSubjects.includes(subject) && !unavailable && !conflicts.length && eligible.some((item) => item.name === teacher) && rooms.some((item) => item.name === room));
   return <Dialog open onOpenChange={(open) => { if (!open) close(); }}><DialogContent className="w-[calc(100%-2rem)] rounded-lg"><DialogHeader><DialogTitle>{lesson ? "Modifier le cours" : "Ajouter un cours"}</DialogTitle><DialogDescription>{className} · {days[day]} · {slots[slot]}</DialogDescription></DialogHeader>
     <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); if (!valid) return; try { setLesson(className, day, slot, { subject, teacher, room }); close(); } catch (error) { setError(error instanceof Error ? error.message : "Impossible d’enregistrer ce cours."); } }}>

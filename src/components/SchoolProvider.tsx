@@ -60,7 +60,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       if (!start || day < 0 || day > 4) throw new Error("Créneau invalide.");
       if (lesson && !settings.includedSubjects.includes(lesson.subject)) throw new Error("Cette matière n’est pas incluse.");
       if (lesson && teacherUnavailable(constraints, lesson.teacher, day, start, settings.duration)) throw new Error("Cet enseignant est indisponible sur ce créneau.");
-      setSchedules(updateScheduleLesson(schedules, className, day, slot, lesson));
+      setSchedules(updateScheduleLesson(schedules, className, day, slot, lesson, settings.allowSimultaneousLessons));
     },
     addClass: (value) => {
       const record = classSchema.parse(value);

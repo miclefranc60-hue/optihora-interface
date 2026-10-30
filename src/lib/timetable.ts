@@ -2,17 +2,17 @@ import { days, slots, type Lesson } from "@/lib/data";
 import { courseSlots, minutesOf, timeAt } from "@/lib/settings";
 
 export type Schedule = { name: string; grid: Lesson[][] };
-export function teacherScheduleConflicts(schedules: Record<string, Schedule>, className: string, teacher: string, day: number, slot: number): string[] {
-  if (!teacher) return [];
+export function teacherScheduleConflicts(schedules: Record<string, Schedule>, className: string, teacher: string, day: number, slot: number, allowSimultaneousLessons = false): string[] {
+  if (!teacher || allowSimultaneousLessons) return [];
   return Object.entries(schedules)
     .filter(([otherClass, schedule]) => otherClass !== className && schedule.grid[day]?.[slot]?.teacher === teacher)
     .map(([otherClass]) => otherClass);
 }
-export function updateScheduleLesson(schedules: Record<string, Schedule>, className: string, day: number, slot: number, lesson: Lesson): Record<string, Schedule> {
+export function updateScheduleLesson(schedules: Record<string, Schedule>, className: string, day: number, slot: number, lesson: Lesson, allowSimultaneousLessons = false): Record<string, Schedule> {
   const schedule = schedules[className];
   if (!schedule) throw new Error("Emploi du temps inconnu.");
   if (lesson) {
-    const conflicts = teacherScheduleConflicts(schedules, className, lesson.teacher, day, slot);
+    const conflicts = teacherScheduleConflicts(schedules, className, lesson.teacher, day, slot, allowSimultaneousLessons);
     if (conflicts.length) throw new Error(`Cet enseignant a déjà un cours avec ${conflicts.join(", ")} sur ce créneau.`);
   }
   return { ...schedules, [className]: { ...schedule, grid: schedule.grid.map((row, d) => row.map((value, s) => d === day && s === slot ? lesson : value)) } };

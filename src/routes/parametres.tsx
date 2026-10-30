@@ -29,6 +29,7 @@ function SettingsPage() {
   const [subjectAdded, setSubjectAdded] = useState("");
   const [duration, setDuration] = useState(String(settings.duration));
   const [included, setIncluded] = useState(settings.includedSubjects);
+  const [allowSimultaneousLessons, setAllowSimultaneousLessons] = useState(settings.allowSimultaneousLessons);
   const [teacher, setTeacher] = useState(teachers[0]?.name ?? "");
   const [day, setDay] = useState("0");
   const [start, setStart] = useState("08:00");
@@ -44,7 +45,7 @@ function SettingsPage() {
     if (!lesson || !slot) return [];
     const unavailable = teacherUnavailable(constraints, lesson.teacher, d, slot, settings.duration);
     const excluded = !settings.includedSubjects.includes(lesson.subject);
-    const busyClasses = teacherScheduleConflicts(schedules, className, lesson.teacher, d, s);
+    const busyClasses = teacherScheduleConflicts(schedules, className, lesson.teacher, d, s, settings.allowSimultaneousLessons);
     const issues = [unavailable ? "Enseignant indisponible" : "", excluded ? "Matière exclue" : "", busyClasses.length ? `Cours simultané avec ${busyClasses.join(", ")}` : ""].filter(Boolean);
     return issues.length ? [{ className, day: d, slot, teacher: lesson.teacher, issue: issues.join(" · ") }] : [];
   })));
@@ -52,7 +53,7 @@ function SettingsPage() {
     <PageHeader title="Paramètres" subtitle="Organisation de l’établissement" />
     <form onSubmit={(event) => {
       event.preventDefault(); setError(""); setSaved(false);
-      const result = settingsSchema.safeParse({ duration, includedSubjects: included });
+      const result = settingsSchema.safeParse({ duration, includedSubjects: included, allowSimultaneousLessons });
       if (!result.success) { setError(included.length === 0 ? "Sélectionnez au moins une matière." : "La durée doit être un nombre entier de 15 à 90 minutes."); return; }
       saveSettings(result.data); setSaved(true);
     }}>
@@ -72,6 +73,10 @@ function SettingsPage() {
           {subjectError && <p role="alert" className="text-sm text-destructive">{subjectError}</p>}
           {subjectAdded && <p role="status" className="flex items-center gap-2 text-sm text-primary"><Check className="size-4" />{subjectAdded}</p>}
         </div>
+      </section>
+      <section className="grid gap-6 border-t py-7 lg:grid-cols-[280px_1fr]">
+        <h2 className="font-display text-lg font-semibold">Cours simultanés</h2>
+        <div className="flex items-start gap-3"><Checkbox id="allow-simultaneous-lessons" checked={allowSimultaneousLessons} onCheckedChange={(checked) => { setAllowSimultaneousLessons(checked === true); setSaved(false); }} /><Label htmlFor="allow-simultaneous-lessons" className="leading-5">Autoriser un enseignant à enseigner à plusieurs classes en même temps</Label></div>
       </section>
       <div className="flex flex-wrap items-center justify-end gap-4 border-t py-5">{error && <p role="alert" className="text-sm text-destructive">{error}</p>}{saved && <p role="status" className="flex items-center gap-2 text-sm text-primary"><Check className="size-4" />Paramètres enregistrés pour cette session</p>}<Button type="submit"><Save />Enregistrer les paramètres</Button></div>
     </form>
