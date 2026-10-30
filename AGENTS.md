@@ -16,6 +16,7 @@
 - Use the timetable class search parameter for selection and derive dashboard current lessons and teachers’ current classes from the same grids using Europe/Paris time and half-open intervals with the configured course duration.
 
 - Keep institution settings and weekly teacher unavailability in the shared session provider; validate lesson saves centrally and flag existing conflicts without silently deleting lessons.
+- Reject teacher double-booking in the shared schedule update function and reuse its conflict lookup in lesson forms and warnings; common slot indexes represent non-overlapping institution-wide intervals.
 - Preserve eight slot indexes when changing duration; recalculate starts from 08:00, with afternoon starting no earlier than 13:30 and a minimum one-hour lunch break, so existing grids remain aligned.
 
 - Keep predefined and custom subjects in the shared session catalog; all selectors and display lookups use that catalog, and validate referenced IDs against it at provider actions.

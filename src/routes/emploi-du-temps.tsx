@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 
 import { NewScheduleDialog } from "@/components/NewScheduleDialog";
 import { LessonDialog } from "@/components/LessonDialog";
-import { emptyTimetable } from "@/lib/timetable";
+import { emptyTimetable, teacherScheduleConflicts } from "@/lib/timetable";
 import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/emploi-du-temps")({
@@ -83,7 +83,7 @@ function Timetable() {
                         >
                           <p className="font-semibold">{subjectById(l.subject).name}</p>
                           <p className="text-xs text-muted-foreground">{l.teacher} · {l.room}</p>
-                          {(teacherUnavailable(constraints, l.teacher, di, slot, settings.duration) || !settings.includedSubjects.includes(l.subject)) && <p className="text-xs text-destructive">À revoir</p>}
+                          {(teacherUnavailable(constraints, l.teacher, di, slot, settings.duration) || !settings.includedSubjects.includes(l.subject) || teacherScheduleConflicts(schedules, cls, l.teacher, di, s).length > 0) && <p className="text-xs text-destructive">À revoir</p>}
                         </Button>
                       ) : (
                         <Button variant="ghost" disabled={!schedule} onClick={() => setEditing({ day: di, slot: s })} aria-label={`Ajouter un cours ${d} à ${slot}`} className="h-full w-full border border-dashed text-muted-foreground"><Plus /></Button>
