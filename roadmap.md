@@ -7,3 +7,4 @@
 - [x] Appliquer les paramètres aux grilles et à la saisie des cours, avec tests
 - [x] Ajouter des matières personnalisées et les proposer aux enseignants et aux cours
 - [x] Bloquer les cours simultanés d’un enseignant et signaler les conflits existants, sans supprimer de cours
+- [x] Option Paramètres pour autoriser les cours simultanés, appliquée aux enregistrements et aux avertissements

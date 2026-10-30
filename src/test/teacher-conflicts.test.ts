@@ -7,6 +7,14 @@ function schedulesWithLesson() {
   return updateScheduleLesson(schedules, "6eA", 0, 0, lesson);
 }
 describe("One class per teacher at a time", () => {
+  it("allows simultaneous classes only when permission is enabled and flags them again when disabled", () => {
+    const schedules = updateScheduleLesson(schedulesWithLesson(), "5eB", 0, 0, lesson, true);
+    expect(schedules["5eB"]?.grid[0]?.[0]).toEqual(lesson);
+    expect(schedules["6eA"]?.grid[0]?.[0]).toEqual(lesson);
+    expect(teacherScheduleConflicts(schedules, "5eB", lesson.teacher, 0, 0, true)).toEqual([]);
+    expect(teacherScheduleConflicts(schedules, "5eB", lesson.teacher, 0, 0, false)).toEqual(["6eA"]);
+    expect(() => updateScheduleLesson(schedules, "5eB", 0, 0, lesson, false)).toThrow("6eA");
+  });
   it("rejects a simultaneous lesson in a second class without changing either grid", () => {
     const schedules = schedulesWithLesson();
     expect(() => updateScheduleLesson(schedules, "5eB", 0, 0, lesson)).toThrow("6eA");

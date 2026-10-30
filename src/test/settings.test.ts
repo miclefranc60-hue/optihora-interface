@@ -3,6 +3,10 @@ import { courseSlots, settingsSchema, teacherUnavailable, unavailabilitySchema, 
 import { currentLesson, emptyTimetable, slotEnd } from "@/lib/timetable";
 
 describe("Institution settings", () => {
+  it("disables simultaneous teaching by default and preserves explicit permission", () => {
+    expect(settingsSchema.parse({ duration: 60, includedSubjects: ["math"] }).allowSimultaneousLessons).toBe(false);
+    expect(settingsSchema.parse({ duration: 60, includedSubjects: ["math"], allowSimultaneousLessons: true }).allowSimultaneousLessons).toBe(true);
+  });
   it("uses the entered 45-minute duration for starts, ends and current lessons", () => {
     expect(courseSlots(45)).toEqual(["08:00", "08:45", "09:30", "10:15", "13:30", "14:15", "15:00", "15:45"]);
     expect(slotEnd("08:00", 45)).toBe("08:45");
