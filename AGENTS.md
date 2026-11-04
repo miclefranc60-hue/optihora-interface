@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Keep school records in a shared React provider above the routed pages for this UI-only prototype, so additions remain consistent during navigation without claiming durable storage.
+- Keep school records in a shared React provider above the routed pages; it loads from and autosaves all state to browser localStorage after hydration (validated on load), so changes survive reloads on the same device.
 - Reuse one addition dialog and shared validation schemas for classes, teachers and rooms to keep form behavior consistent.
 
 - Store per-class weekly schedules in the shared session provider; new schedules start empty and replacing one requires explicit confirmation.
