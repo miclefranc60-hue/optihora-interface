@@ -9,159 +9,161 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ClassesRouteImport } from './routes/classes'
-import { Route as EmploiDuTempsRouteImport } from './routes/emploi-du-temps'
-import { Route as EnseignantsRouteImport } from './routes/enseignants'
-import { Route as ParametresRouteImport } from './routes/parametres'
-import { Route as SallesRouteImport } from './routes/salles'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedClassesRouteImport } from './routes/_authenticated/classes'
+import { Route as AuthenticatedEmploiDuTempsRouteImport } from './routes/_authenticated/emploi-du-temps'
+import { Route as AuthenticatedEnseignantsRouteImport } from './routes/_authenticated/enseignants'
+import { Route as AuthenticatedParametresRouteImport } from './routes/_authenticated/parametres'
+import { Route as AuthenticatedSallesRouteImport } from './routes/_authenticated/salles'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/_authenticated/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClassesRoute = ClassesRouteImport.update({
-  id: '/classes',
+const AuthenticatedClassesRoute = AuthenticatedClassesRouteImport.update({
+  id: '/_authenticated/classes',
   path: '/classes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmploiDuTempsRoute = EmploiDuTempsRouteImport.update({
-  id: '/emploi-du-temps',
-  path: '/emploi-du-temps',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EnseignantsRoute = EnseignantsRouteImport.update({
-  id: '/enseignants',
-  path: '/enseignants',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ParametresRoute = ParametresRouteImport.update({
-  id: '/parametres',
+const AuthenticatedEmploiDuTempsRoute =
+  AuthenticatedEmploiDuTempsRouteImport.update({
+    id: '/_authenticated/emploi-du-temps',
+    path: '/emploi-du-temps',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedEnseignantsRoute =
+  AuthenticatedEnseignantsRouteImport.update({
+    id: '/_authenticated/enseignants',
+    path: '/enseignants',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedParametresRoute = AuthenticatedParametresRouteImport.update({
+  id: '/_authenticated/parametres',
   path: '/parametres',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SallesRoute = SallesRouteImport.update({
-  id: '/salles',
+const AuthenticatedSallesRoute = AuthenticatedSallesRouteImport.update({
+  id: '/_authenticated/salles',
   path: '/salles',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/classes': typeof ClassesRoute
-  '/emploi-du-temps': typeof EmploiDuTempsRoute
-  '/enseignants': typeof EnseignantsRoute
-  '/parametres': typeof ParametresRoute
-  '/salles': typeof SallesRoute
+  '/classes': typeof AuthenticatedClassesRoute
+  '/emploi-du-temps': typeof AuthenticatedEmploiDuTempsRoute
+  '/enseignants': typeof AuthenticatedEnseignantsRoute
+  '/parametres': typeof AuthenticatedParametresRoute
+  '/salles': typeof AuthenticatedSallesRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/classes': typeof ClassesRoute
-  '/emploi-du-temps': typeof EmploiDuTempsRoute
-  '/enseignants': typeof EnseignantsRoute
-  '/parametres': typeof ParametresRoute
-  '/salles': typeof SallesRoute
+  '/classes': typeof AuthenticatedClassesRoute
+  '/emploi-du-temps': typeof AuthenticatedEmploiDuTempsRoute
+  '/enseignants': typeof AuthenticatedEnseignantsRoute
+  '/parametres': typeof AuthenticatedParametresRoute
+  '/salles': typeof AuthenticatedSallesRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/classes': typeof ClassesRoute
-  '/emploi-du-temps': typeof EmploiDuTempsRoute
-  '/enseignants': typeof EnseignantsRoute
-  '/parametres': typeof ParametresRoute
-  '/salles': typeof SallesRoute
+  '/_authenticated/classes': typeof AuthenticatedClassesRoute
+  '/_authenticated/emploi-du-temps': typeof AuthenticatedEmploiDuTempsRoute
+  '/_authenticated/enseignants': typeof AuthenticatedEnseignantsRoute
+  '/_authenticated/parametres': typeof AuthenticatedParametresRoute
+  '/_authenticated/salles': typeof AuthenticatedSallesRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/classes'
     | '/emploi-du-temps'
     | '/enseignants'
     | '/parametres'
     | '/salles'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/classes'
     | '/emploi-du-temps'
     | '/enseignants'
     | '/parametres'
     | '/salles'
+    | '/'
   id:
     | '__root__'
-    | '/'
-    | '/classes'
-    | '/emploi-du-temps'
-    | '/enseignants'
-    | '/parametres'
-    | '/salles'
+    | '/_authenticated/classes'
+    | '/_authenticated/emploi-du-temps'
+    | '/_authenticated/enseignants'
+    | '/_authenticated/parametres'
+    | '/_authenticated/salles'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ClassesRoute: typeof ClassesRoute
-  EmploiDuTempsRoute: typeof EmploiDuTempsRoute
-  EnseignantsRoute: typeof EnseignantsRoute
-  ParametresRoute: typeof ParametresRoute
-  SallesRoute: typeof SallesRoute
+  AuthenticatedClassesRoute: typeof AuthenticatedClassesRoute
+  AuthenticatedEmploiDuTempsRoute: typeof AuthenticatedEmploiDuTempsRoute
+  AuthenticatedEnseignantsRoute: typeof AuthenticatedEnseignantsRoute
+  AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
+  AuthenticatedSallesRoute: typeof AuthenticatedSallesRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/classes': {
-      id: '/classes'
+    '/_authenticated/classes': {
+      id: '/_authenticated/classes'
       path: '/classes'
       fullPath: '/classes'
-      preLoaderRoute: typeof ClassesRouteImport
+      preLoaderRoute: typeof AuthenticatedClassesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/emploi-du-temps': {
-      id: '/emploi-du-temps'
+    '/_authenticated/emploi-du-temps': {
+      id: '/_authenticated/emploi-du-temps'
       path: '/emploi-du-temps'
       fullPath: '/emploi-du-temps'
-      preLoaderRoute: typeof EmploiDuTempsRouteImport
+      preLoaderRoute: typeof AuthenticatedEmploiDuTempsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/enseignants': {
-      id: '/enseignants'
+    '/_authenticated/enseignants': {
+      id: '/_authenticated/enseignants'
       path: '/enseignants'
       fullPath: '/enseignants'
-      preLoaderRoute: typeof EnseignantsRouteImport
+      preLoaderRoute: typeof AuthenticatedEnseignantsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/parametres': {
-      id: '/parametres'
+    '/_authenticated/parametres': {
+      id: '/_authenticated/parametres'
       path: '/parametres'
       fullPath: '/parametres'
-      preLoaderRoute: typeof ParametresRouteImport
+      preLoaderRoute: typeof AuthenticatedParametresRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salles': {
-      id: '/salles'
+    '/_authenticated/salles': {
+      id: '/_authenticated/salles'
       path: '/salles'
       fullPath: '/salles'
-      preLoaderRoute: typeof SallesRouteImport
+      preLoaderRoute: typeof AuthenticatedSallesRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ClassesRoute: ClassesRoute,
-  EmploiDuTempsRoute: EmploiDuTempsRoute,
-  EnseignantsRoute: EnseignantsRoute,
-  ParametresRoute: ParametresRoute,
-  SallesRoute: SallesRoute,
+  AuthenticatedClassesRoute: AuthenticatedClassesRoute,
+  AuthenticatedEmploiDuTempsRoute: AuthenticatedEmploiDuTempsRoute,
+  AuthenticatedEnseignantsRoute: AuthenticatedEnseignantsRoute,
+  AuthenticatedParametresRoute: AuthenticatedParametresRoute,
+  AuthenticatedSallesRoute: AuthenticatedSallesRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
