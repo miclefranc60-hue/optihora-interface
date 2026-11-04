@@ -25,35 +25,48 @@ type SchoolState = {
   subjectById: (id: string) => Subject;
 };
 const SchoolContext = createContext<SchoolState | null>(null);
-export function SchoolProvider({ children }: { children: ReactNode }) {
-  const [classes, setClasses] = useState<SchoolClass[]>(() => classSchema.array().parse(initialClasses));
-  const [teachers, setTeachers] = useState<Teacher[]>(() => teacherSchema.array().parse(initialTeachers));
-  const [rooms, setRooms] = useState<Room[]>(() => roomSchema.array().parse(initialRooms));
+export type Establishment = { name: string; type: string; city: string; email: string };
+export function SchoolProvider({ children, userId, email }: { children: ReactNode; userId: string; email: string }) {
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [settings, setSettings] = useState<SchoolSettings>(defaultSettings);
   const [subjects, setSubjects] = useState<Subject[]>(initialSubjects);
   const [constraints, setConstraints] = useState<Unavailability[]>([]);
-  const [schedules, setSchedules] = useState<Record<string, Schedule>>(() => Object.fromEntries(initialClasses.map((item) => [item.name, { name: `Semaine type · ${item.name}`, grid: buildTimetable(item.name) }])));
+  const [schedules, setSchedules] = useState<Record<string, Schedule>>({});
+  const [establishment, setEstablishment] = useState<Establishment>({ name: "", type: "", city: "", email });
   const [loaded, setLoaded] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        if (saved.classes) setClasses(classSchema.array().parse(saved.classes));
-        if (saved.teachers) setTeachers(teacherSchema.array().parse(saved.teachers));
-        if (saved.rooms) setRooms(roomSchema.array().parse(saved.rooms));
-        if (saved.subjects) setSubjects(saved.subjects);
-        if (saved.settings) setSettings(settingsSchema.parse(saved.settings));
-        if (saved.constraints) setConstraints(saved.constraints.map((item: unknown) => unavailabilitySchema.parse(item)));
-        if (saved.schedules) setSchedules(saved.schedules);
+    let cancelled = false;
+    supabase.from("profiles").select("name, type, city, data").eq("id", userId).maybeSingle().then(({ data: row }) => {
+      if (cancelled) return;
+      if (row) {
+        setEstablishment({ name: row.name, type: row.type, city: row.city, email });
+        const saved = row.data as Record<string, unknown> | null;
+        try {
+          if (saved?.classes) setClasses(classSchema.array().parse(saved.classes));
+          if (saved?.teachers) setTeachers(teacherSchema.array().parse(saved.teachers));
+          if (saved?.rooms) setRooms(roomSchema.array().parse(saved.rooms));
+          if (saved?.subjects) setSubjects(saved.subjects as Subject[]);
+          if (saved?.settings) setSettings(settingsSchema.parse(saved.settings));
+          if (saved?.constraints) setConstraints(unavailabilitySchema.array().parse(saved.constraints));
+          if (saved?.schedules) setSchedules(saved.schedules as Record<string, Schedule>);
+        } catch { /* données invalides : valeurs par défaut */ }
       }
-    } catch { /* données invalides : on garde les valeurs par défaut */ }
-    setLoaded(true);
-  }, []);
+      setLoaded(true);
+    });
+    return () => { cancelled = true; };
+  }, [userId, email]);
   useEffect(() => {
     if (!loaded) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ classes, teachers, rooms, subjects, settings, constraints, schedules }));
-  }, [loaded, classes, teachers, rooms, subjects, settings, constraints, schedules]);
+    const timer = setTimeout(() => {
+      const data = JSON.parse(JSON.stringify({ classes, teachers, rooms, subjects, settings, constraints, schedules }));
+      supabase.from("profiles").upsert({ id: userId, name: establishment.name, type: establishment.type, city: establishment.city, data, updated_at: new Date().toISOString() }).then(({ error }) => setSaveError(!!error));
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [loaded, userId, establishment, classes, teachers, rooms, subjects, settings, constraints, schedules]);
+  if (!loaded) return <div className="grid min-h-screen place-items-center text-muted-foreground">Chargement de votre établissement…</div>;
   return <SchoolContext.Provider value={{ classes, teachers, rooms, schedules, settings, constraints, subjects,
     subjectById: (id) => findSubject(subjects, id),
     addSubject: (name) => {
