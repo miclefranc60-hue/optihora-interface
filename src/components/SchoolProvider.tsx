@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+const STORAGE_KEY = "optihora-data-v1";
 import { classes as initialClasses, teachers as initialTeachers, rooms as initialRooms } from "@/lib/data";
 import { classSchema, teacherSchema, roomSchema, ensureUniqueName, type SchoolClass, type Teacher, type Room } from "@/lib/school-records";
 import { buildTimetable, subjects as initialSubjects, type Subject, type Lesson } from "@/lib/data";
@@ -32,6 +33,27 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   const [subjects, setSubjects] = useState<Subject[]>(initialSubjects);
   const [constraints, setConstraints] = useState<Unavailability[]>([]);
   const [schedules, setSchedules] = useState<Record<string, Schedule>>(() => Object.fromEntries(initialClasses.map((item) => [item.name, { name: `Semaine type · ${item.name}`, grid: buildTimetable(item.name) }])));
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.classes) setClasses(classSchema.array().parse(saved.classes));
+        if (saved.teachers) setTeachers(teacherSchema.array().parse(saved.teachers));
+        if (saved.rooms) setRooms(roomSchema.array().parse(saved.rooms));
+        if (saved.subjects) setSubjects(saved.subjects);
+        if (saved.settings) setSettings(settingsSchema.parse(saved.settings));
+        if (saved.constraints) setConstraints(saved.constraints.map((item: unknown) => unavailabilitySchema.parse(item)));
+        if (saved.schedules) setSchedules(saved.schedules);
+      }
+    } catch { /* données invalides : on garde les valeurs par défaut */ }
+    setLoaded(true);
+  }, []);
+  useEffect(() => {
+    if (!loaded) return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ classes, teachers, rooms, subjects, settings, constraints, schedules }));
+  }, [loaded, classes, teachers, rooms, subjects, settings, constraints, schedules]);
   return <SchoolContext.Provider value={{ classes, teachers, rooms, schedules, settings, constraints, subjects,
     subjectById: (id) => findSubject(subjects, id),
     addSubject: (name) => {
