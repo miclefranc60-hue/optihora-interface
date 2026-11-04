@@ -8,7 +8,7 @@ import { subjectTextClass } from "@/lib/subjects";
 import { useSchool } from "@/components/SchoolProvider";
 import { currentLesson, slotEnd } from "@/lib/timetable";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [
     { title: "Tableau de bord — OptiHora" },
     { name: "description", content: "Les cours actuels de chaque classe et les emplois du temps de votre établissement." },

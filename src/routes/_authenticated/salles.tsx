@@ -4,7 +4,7 @@ import { useSchool } from "@/components/SchoolProvider";
 
 import { AddRecordDialog } from "@/components/AddRecordDialog";
 
-export const Route = createFileRoute("/salles")({
+export const Route = createFileRoute("/_authenticated/salles")({
   head: () => ({
     meta: [
       { property: "og:type", content: "website" },

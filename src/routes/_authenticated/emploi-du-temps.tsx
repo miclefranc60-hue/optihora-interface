@@ -12,7 +12,7 @@ import { LessonDialog } from "@/components/LessonDialog";
 import { emptyTimetable, teacherScheduleConflicts } from "@/lib/timetable";
 import { Plus } from "lucide-react";
 
-export const Route = createFileRoute("/emploi-du-temps")({
+export const Route = createFileRoute("/_authenticated/emploi-du-temps")({
   validateSearch: (search: Record<string, unknown>) => ({ classe: typeof search["classe"] === "string" ? search["classe"] : "" }),
   head: () => ({
     meta: [
