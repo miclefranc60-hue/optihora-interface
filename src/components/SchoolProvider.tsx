@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-const STORAGE_KEY = "optihora-data-v1";
-import { classes as initialClasses, teachers as initialTeachers, rooms as initialRooms } from "@/lib/data";
+import { supabase } from "@/integrations/supabase/client";
 import { classSchema, teacherSchema, roomSchema, ensureUniqueName, type SchoolClass, type Teacher, type Room } from "@/lib/school-records";
-import { buildTimetable, subjects as initialSubjects, type Subject, type Lesson } from "@/lib/data";
+import { subjects as initialSubjects, type Subject, type Lesson } from "@/lib/data";
 import { createSubject, findSubject } from "@/lib/subjects";
 import { emptyTimetable, updateScheduleLesson, type Schedule } from "@/lib/timetable";
 import { defaultSettings, settingsSchema, unavailabilitySchema, teacherUnavailable, courseSlots, type SchoolSettings, type Unavailability } from "@/lib/settings";
@@ -23,6 +22,9 @@ type SchoolState = {
   subjects: Subject[];
   addSubject: (name: string) => Subject;
   subjectById: (id: string) => Subject;
+  establishment: Establishment;
+  saveEstablishment: (value: Omit<Establishment, "email">) => void;
+  saveError: boolean;
 };
 const SchoolContext = createContext<SchoolState | null>(null);
 export type Establishment = { name: string; type: string; city: string; email: string };
@@ -43,7 +45,7 @@ export function SchoolProvider({ children, userId, email }: { children: ReactNod
       if (cancelled) return;
       if (row) {
         setEstablishment({ name: row.name, type: row.type, city: row.city, email });
-        const saved = row.data as Record<string, unknown> | null;
+        const saved = row.data as { [key: string]: unknown; classes?: unknown; teachers?: unknown; rooms?: unknown; subjects?: unknown; settings?: unknown; constraints?: unknown; schedules?: unknown } | null;
         try {
           if (saved?.classes) setClasses(classSchema.array().parse(saved.classes));
           if (saved?.teachers) setTeachers(teacherSchema.array().parse(saved.teachers));
@@ -67,7 +69,7 @@ export function SchoolProvider({ children, userId, email }: { children: ReactNod
     return () => clearTimeout(timer);
   }, [loaded, userId, establishment, classes, teachers, rooms, subjects, settings, constraints, schedules]);
   if (!loaded) return <div className="grid min-h-screen place-items-center text-muted-foreground">Chargement de votre établissement…</div>;
-  return <SchoolContext.Provider value={{ classes, teachers, rooms, schedules, settings, constraints, subjects,
+  return <SchoolContext.Provider value={{ establishment, saveError, saveEstablishment: (value) => setEstablishment((previous) => ({ ...previous, ...value })), classes, teachers, rooms, schedules, settings, constraints, subjects,
     subjectById: (id) => findSubject(subjects, id),
     addSubject: (name) => {
       const subject = createSubject(subjects, name, `custom-${crypto.randomUUID()}`);
