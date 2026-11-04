@@ -13,7 +13,7 @@ import { subjectTextClass } from "@/lib/subjects";
 import { teacherScheduleConflicts } from "@/lib/timetable";
 import { settingsSchema, unavailabilitySchema, courseSlots, teacherUnavailable } from "@/lib/settings";
 
-export const Route = createFileRoute("/parametres")({
+export const Route = createFileRoute("/_authenticated/parametres")({
   head: () => ({ meta: [
     { title: "Paramètres de l’établissement — OptiHora" },
     { name: "description", content: "Configurez la durée des cours, les matières et les indisponibilités des enseignants." },

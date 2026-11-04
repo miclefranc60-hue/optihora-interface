@@ -6,7 +6,7 @@ import { currentTeacherClasses } from "@/lib/timetable";
 
 import { AddRecordDialog } from "@/components/AddRecordDialog";
 
-export const Route = createFileRoute("/enseignants")({
+export const Route = createFileRoute("/_authenticated/enseignants")({
   head: () => ({
     meta: [
       { property: "og:type", content: "website" },
