@@ -12,11 +12,11 @@
 - Keep all school state in a shared provider mounted by the `_authenticated` layout; it loads from and debounce-saves to the signed-in establishment's `profiles.data` JSON row, so one shared account per establishment sees the same data on any device.
 - Reuse one addition dialog and shared validation schemas for classes, teachers and rooms to keep form behavior consistent.
 
-- Store per-class weekly schedules in the shared session provider; new schedules start empty and replacing one requires explicit confirmation.
+- Store per-class weekly schedules in the shared session provider; new schedules are generated from per-subject weekly hours by `src/lib/generator.ts` (max 2 h per subject per day, respecting teacher availability) and replacing one requires explicit confirmation.
 - Use the timetable class search parameter for selection and derive dashboard current lessons and teachers’ current classes from the same grids using Europe/Paris time and half-open intervals with the configured course duration.
 
 - Keep institution settings and weekly teacher unavailability in the shared session provider; validate lesson saves centrally and flag existing conflicts without silently deleting lessons.
 - Apply the institution's simultaneous-teaching permission in the shared schedule update function and its conflict lookup used by lesson forms and warnings; disabling permission flags existing lessons without deleting them, and common slot indexes represent non-overlapping institution-wide intervals.
-- Preserve eight slot indexes when changing duration; recalculate starts from 08:00, with afternoon starting no earlier than 13:30 and a minimum one-hour lunch break, so existing grids remain aligned.
+- Preserve eight slot indexes when changing duration or courses per day (shorter days only hide trailing indexes); recalculate starts from 08:00, with afternoon starting no earlier than 13:30 and a minimum one-hour lunch break, so existing grids remain aligned.
 
 - Keep predefined and custom subjects in the shared session catalog; all selectors and display lookups use that catalog, and validate referenced IDs against it at provider actions.
