@@ -15,7 +15,6 @@ export function generateTimetable({ className, hours, settings, teachers, rooms,
   const remaining: Record<string, number> = Object.fromEntries(Object.entries(hours).filter(([, value]) => value > 0));
   const starts = courseSlots(settings.duration, settings.coursesPerDay);
   const others = Object.entries(schedules).filter(([name]) => name !== className).map(([, schedule]) => schedule.grid);
-  const total = Object.values(remaining).reduce((sum, value) => sum + value, 0);
   const days = grid.length;
   for (let day = 0; day < days; day++) {
     const left = Object.values(remaining).reduce((sum, value) => sum + value, 0);
@@ -45,7 +44,6 @@ export function generateTimetable({ className, hours, settings, teachers, rooms,
         return (free.find((teacher) => teacher.classes.includes(className)) ?? free[0])?.name;
       }
     }
-    void total;
   }
   const unplaced = Object.fromEntries(Object.entries(remaining).filter(([, value]) => value > 0));
   return { grid, unplaced };

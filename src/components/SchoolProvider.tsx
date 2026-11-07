@@ -93,7 +93,7 @@ export function SchoolProvider({ children, userId, email }: { children: ReactNod
       setSchedules((previous) => ({ ...previous, [className]: { name: name.trim(), grid: emptyTimetable() } }));
     },
     setLesson: (className, day, slot, lesson) => {
-      const start = courseSlots(settings.duration)[slot];
+      const start = courseSlots(settings.duration, settings.coursesPerDay)[slot];
       if (!start || day < 0 || day > 4) throw new Error("Créneau invalide.");
       if (lesson && !settings.includedSubjects.includes(lesson.subject)) throw new Error("Cette matière n’est pas incluse.");
       if (lesson && teacherUnavailable(constraints, lesson.teacher, day, start, settings.duration)) throw new Error("Cet enseignant est indisponible sur ce créneau.");

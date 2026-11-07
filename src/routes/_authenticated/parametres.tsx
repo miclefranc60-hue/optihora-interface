@@ -39,7 +39,7 @@ function SettingsPage() {
   const [constraintError, setConstraintError] = useState("");
   const [saved, setSaved] = useState(false);
   const [added, setAdded] = useState(false);
-  const starts = courseSlots(settings.duration);
+  const starts = courseSlots(settings.duration, settings.coursesPerDay);
   const conflicts = Object.entries(schedules).flatMap(([className, schedule]) => schedule.grid.flatMap((row, d) => row.flatMap((lesson, s) => {
     const slot = starts[s];
     if (!lesson || !slot) return [];
