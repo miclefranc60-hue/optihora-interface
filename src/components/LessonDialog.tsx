@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 export function LessonDialog({ className, day, slot, lesson, close }: { className: string; day: number; slot: number; lesson: Lesson; close: () => void }) {
   const { teachers, rooms, setLesson, settings, constraints, subjects, schedules } = useSchool();
-  const slots = courseSlots(settings.duration);
+  const slots = courseSlots(settings.duration, settings.coursesPerDay);
   const included = subjects.filter((subject) => settings.includedSubjects.includes(subject.id));
   const [subject, setSubject] = useState(lesson?.subject ?? included[0]?.id ?? "");
   const [teacher, setTeacher] = useState(lesson?.teacher ?? "");

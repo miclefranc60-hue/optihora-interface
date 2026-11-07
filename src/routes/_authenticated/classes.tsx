@@ -35,6 +35,7 @@ function RecordsPage() {
               <div className="flex justify-between"><dt>Professeur principal</dt><dd className="font-medium text-foreground">{c.mainTeacher || "Non attribué"}</dd></div>
               <div className="flex justify-between"><dt>Heures / semaine</dt><dd className="font-medium text-foreground">{c.hours} h</dd></div>
             </dl>
+            <div className="mt-4 flex justify-end"><AddRecordDialog kind="class" editing={c} /></div>
           </div>
         ))}
       </div>

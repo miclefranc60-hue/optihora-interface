@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/emploi-du-temps")({
 
 function Timetable() {
   const { classes, schedules, settings, constraints, subjectById } = useSchool();
-  const slots = courseSlots(settings.duration);
+  const slots = courseSlots(settings.duration, settings.coursesPerDay);
   const { classe } = Route.useSearch();
   const navigate = useNavigate();
   const cls = classes.some((item) => item.name === classe) ? classe : classes[0]?.name ?? "";

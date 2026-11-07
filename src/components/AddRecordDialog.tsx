@@ -1,5 +1,5 @@
 import { useId, useState, type ReactNode } from "react";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { useSchool } from "@/components/SchoolProvider";
-import { classSchema, teacherSchema, roomSchema } from "@/lib/school-records";
+import { classSchema, teacherSchema, roomSchema, type SchoolClass } from "@/lib/school-records";
 
 type Kind = "class" | "teacher" | "room";
 const titles = { class: "Ajouter une classe", teacher: "Ajouter un enseignant", room: "Ajouter une salle" };
@@ -17,7 +17,7 @@ function Choice({ id, value, onChange, items }: { id: string; value: string; onC
 function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
   return <div className="space-y-2"><Label htmlFor={id}>{label}</Label>{children}</div>;
 }
-export function AddRecordDialog({ kind }: { kind: Kind }) {
+export function AddRecordDialog({ kind, editing }: { kind: Kind; editing?: SchoolClass }) {
   const school = useSchool();
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -38,20 +38,22 @@ export function AddRecordDialog({ kind }: { kind: Kind }) {
     if (next) {
       setName(""); setLevel("Collège"); setStudents("26"); setHours(kind === "teacher" ? "18" : "26");
       setMainTeacher("none"); setSubject("math"); setSelectedClasses([]); setRoomType("Salle de cours"); setCapacity("30"); setSuccess("");
+      if (editing) { setName(editing.name); setLevel(editing.level); setStudents(String(editing.students)); setHours(String(editing.hours)); setMainTeacher(editing.mainTeacher || "none"); }
     }
   }
   return <div className="flex flex-col items-end gap-2">
     <Dialog open={open} onOpenChange={changeOpen}>
-      <DialogTrigger asChild><Button size="lg" className="px-4"><Plus />{titles[kind]}</Button></DialogTrigger>
+      <DialogTrigger asChild>{editing ? <Button variant="outline" size="sm" aria-label={`Modifier la classe ${editing.name}`}><Pencil />Modifier</Button> : <Button size="lg" className="px-4"><Plus />{titles[kind]}</Button>}</DialogTrigger>
       <DialogContent className="max-h-[90dvh] w-[calc(100%-2rem)] overflow-y-auto rounded-lg" aria-describedby={`${id}-description`}>
-        <DialogHeader><DialogTitle>{titles[kind]}</DialogTitle><DialogDescription id={`${id}-description`} className="sr-only">Renseignements de {kind === "class" ? "la classe" : kind === "teacher" ? "l’enseignant" : "la salle"}</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>{editing ? `Modifier la classe ${editing.name}` : titles[kind]}</DialogTitle><DialogDescription id={`${id}-description`} className="sr-only">Renseignements de {kind === "class" ? "la classe" : kind === "teacher" ? "l’enseignant" : "la salle"}</DialogDescription></DialogHeader>
         <form className="space-y-5" onSubmit={(event) => {
           event.preventDefault(); setError("");
           try {
-            if (kind === "class") school.addClass(classSchema.parse({ name, level, students, hours, mainTeacher: mainTeacher === "none" ? "" : mainTeacher }));
+            if (kind === "class" && editing) school.updateClass(editing.name, classSchema.parse({ name, level, students, hours, mainTeacher: mainTeacher === "none" ? "" : mainTeacher }));
+            else if (kind === "class") school.addClass(classSchema.parse({ name, level, students, hours, mainTeacher: mainTeacher === "none" ? "" : mainTeacher }));
             if (kind === "teacher") school.addTeacher(teacherSchema.parse({ name, subject, hours, classes: selectedClasses }));
             if (kind === "room") school.addRoom(roomSchema.parse({ name, type: roomType, capacity }));
-            setOpen(false); setSuccess(`${name.trim()} ajouté${kind === "teacher" ? "" : "e"}.`);
+            setOpen(false); setSuccess(editing ? `${name.trim()} modifiée.` : `${name.trim()} ajouté${kind === "teacher" ? "" : "e"}.`);
           } catch (cause) { setError(cause instanceof Error && !cause.message.startsWith("[") ? cause.message : "Vérifiez les renseignements saisis."); }
         }}>
           <Field id={`${id}-name`} label={kind === "class" ? "Nom de la classe" : kind === "teacher" ? "Nom de l’enseignant" : "Nom de la salle"}><Input id={`${id}-name`} required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} placeholder={kind === "class" ? "Ex. : 6eB" : kind === "teacher" ? "Ex. : Mme Martin" : "Ex. : A103"} /></Field>
@@ -70,7 +72,7 @@ export function AddRecordDialog({ kind }: { kind: Kind }) {
             <Field id={`${id}-capacity`} label="Capacité (places)"><Input id={`${id}-capacity`} type="number" required min={1} step={1} value={capacity} onChange={(event) => setCapacity(event.target.value)} /></Field>
           </>}
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-          <DialogFooter className="gap-2 border-t pt-4"><Button type="button" variant="outline" onClick={() => changeOpen(false)}>Annuler</Button><Button type="submit"><Plus />Ajouter</Button></DialogFooter>
+          <DialogFooter className="gap-2 border-t pt-4"><Button type="button" variant="outline" onClick={() => changeOpen(false)}>Annuler</Button><Button type="submit">{editing ? <><Check />Enregistrer</> : <><Plus />Ajouter</>}</Button></DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

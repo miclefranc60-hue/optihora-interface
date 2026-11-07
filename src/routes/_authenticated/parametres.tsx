@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { days } from "@/lib/data";
 import { subjectTextClass } from "@/lib/subjects";
-import { teacherScheduleConflicts } from "@/lib/timetable";
+import { teacherScheduleConflicts, slotEnd } from "@/lib/timetable";
 import { settingsSchema, unavailabilitySchema, courseSlots, teacherUnavailable } from "@/lib/settings";
 
 export const Route = createFileRoute("/_authenticated/parametres")({
@@ -29,6 +29,7 @@ function SettingsPage() {
   const [subjectAdded, setSubjectAdded] = useState("");
   const [duration, setDuration] = useState(String(settings.duration));
   const [included, setIncluded] = useState(settings.includedSubjects);
+  const [coursesPerDay, setCoursesPerDay] = useState(String(settings.coursesPerDay));
   const [allowSimultaneousLessons, setAllowSimultaneousLessons] = useState(settings.allowSimultaneousLessons);
   const [teacher, setTeacher] = useState(teachers[0]?.name ?? "");
   const [day, setDay] = useState("0");
@@ -39,7 +40,7 @@ function SettingsPage() {
   const [constraintError, setConstraintError] = useState("");
   const [saved, setSaved] = useState(false);
   const [added, setAdded] = useState(false);
-  const starts = courseSlots(settings.duration);
+  const starts = courseSlots(settings.duration, settings.coursesPerDay);
   const conflicts = Object.entries(schedules).flatMap(([className, schedule]) => schedule.grid.flatMap((row, d) => row.flatMap((lesson, s) => {
     const slot = starts[s];
     if (!lesson || !slot) return [];
@@ -53,13 +54,13 @@ function SettingsPage() {
     <PageHeader title="Paramètres" subtitle="Organisation de l’établissement" />
     <form onSubmit={(event) => {
       event.preventDefault(); setError(""); setSaved(false);
-      const result = settingsSchema.safeParse({ duration, includedSubjects: included, allowSimultaneousLessons });
-      if (!result.success) { setError(included.length === 0 ? "Sélectionnez au moins une matière." : "La durée doit être un nombre entier de 15 à 90 minutes."); return; }
+      const result = settingsSchema.safeParse({ duration, includedSubjects: included, allowSimultaneousLessons, coursesPerDay });
+      if (!result.success) { setError(included.length === 0 ? "Sélectionnez au moins une matière." : "La durée doit être de 15 à 90 minutes et la journée compter de 1 à 8 cours."); return; }
       saveSettings(result.data); setSaved(true);
     }}>
       <section className="grid gap-6 border-t py-7 lg:grid-cols-[280px_1fr]">
-        <div><h2 className="flex items-center gap-2 font-display text-lg font-semibold"><Clock3 className="size-5 text-primary" />Durée d’un cours</h2><p className="mt-2 text-sm text-muted-foreground">Durée commune à toutes les classes</p></div>
-        <div className="max-w-xl space-y-4"><div className="max-w-60 space-y-2"><Label htmlFor="course-duration">Durée en minutes</Label><Input id="course-duration" type="number" min={15} max={90} step={1} required value={duration} onChange={(event) => { setDuration(event.target.value); setSaved(false); }} /></div><p className="text-sm text-muted-foreground">Début à 08:00 · 4 cours le matin, 4 l’après-midi · reprise à 13:30 au plus tôt, avec au moins 60 minutes de pause.</p><p className="text-sm text-muted-foreground">Les horaires des cours déjà placés seront recalculés, sans supprimer les cours.</p></div>
+        <div><h2 className="flex items-center gap-2 font-display text-lg font-semibold"><Clock3 className="size-5 text-primary" />Durée des cours et de la journée</h2><p className="mt-2 text-sm text-muted-foreground">Durée commune à toutes les classes</p></div>
+        <div className="max-w-xl space-y-4"><div className="max-w-60 space-y-2"><Label htmlFor="course-duration">Durée en minutes</Label><Input id="course-duration" type="number" min={15} max={90} step={1} required value={duration} onChange={(event) => { setDuration(event.target.value); setSaved(false); }} /></div><div className="max-w-60 space-y-2"><Label htmlFor="courses-per-day">Longueur de la journée (cours par jour)</Label><Input id="courses-per-day" type="number" min={1} max={8} step={1} required value={coursesPerDay} onChange={(event) => { setCoursesPerDay(event.target.value); setSaved(false); }} /></div>{(() => { const list = courseSlots(Number(duration) || settings.duration, Number(coursesPerDay) || 8); const last = list[list.length - 1]; return last ? <p className="text-sm font-medium">Journée de 08:00 à {slotEnd(last, Number(duration) || settings.duration)}</p> : null; })()}<p className="text-sm text-muted-foreground">Début à 08:00 · jusqu’à 4 cours le matin, 4 l’après-midi · reprise à 13:30 au plus tôt, avec au moins 60 minutes de pause.</p><p className="text-sm text-muted-foreground">Les horaires des cours déjà placés seront recalculés, sans supprimer les cours.</p></div>
       </section>
       <section className="grid gap-6 border-t py-7 lg:grid-cols-[280px_1fr]">
         <div><h2 className="flex items-center gap-2 font-display text-lg font-semibold"><BookOpen className="size-5 text-primary" />Matières incluses</h2><p className="mt-2 text-sm text-muted-foreground">{included.length} matière{included.length > 1 ? "s" : ""} sélectionnée{included.length > 1 ? "s" : ""}</p></div>
