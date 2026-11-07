@@ -3,12 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { classSchema, teacherSchema, roomSchema, ensureUniqueName, type SchoolClass, type Teacher, type Room } from "@/lib/school-records";
 import { subjects as initialSubjects, type Subject, type Lesson } from "@/lib/data";
 import { createSubject, findSubject } from "@/lib/subjects";
+import { generateTimetable } from "@/lib/generator";
 import { emptyTimetable, updateScheduleLesson, type Schedule } from "@/lib/timetable";
 import { defaultSettings, settingsSchema, unavailabilitySchema, teacherUnavailable, courseSlots, type SchoolSettings, type Unavailability } from "@/lib/settings";
 
 type SchoolState = {
   classes: SchoolClass[]; teachers: Teacher[]; rooms: Room[];
   addClass: (value: SchoolClass) => void;
+  updateClass: (originalName: string, value: SchoolClass) => void;
+  generateSchedule: (className: string, name: string, hours: Record<string, number>) => Record<string, number>;
   addTeacher: (value: Teacher) => void;
   addRoom: (value: Room) => void;
   schedules: Record<string, Schedule>;
@@ -91,6 +94,26 @@ export function SchoolProvider({ children, userId, email }: { children: ReactNod
     createSchedule: (className, name) => {
       if (!classes.some((item) => item.name === className) || !name.trim()) throw new Error("Choisissez une classe et un nom.");
       setSchedules((previous) => ({ ...previous, [className]: { name: name.trim(), grid: emptyTimetable() } }));
+    },
+    generateSchedule: (className, name, hours) => {
+      if (!classes.some((item) => item.name === className) || !name.trim()) throw new Error("Choisissez une classe et un nom.");
+      const { grid, unplaced } = generateTimetable({ className, hours, settings, teachers, rooms, constraints, schedules });
+      setSchedules((previous) => ({ ...previous, [className]: { name: name.trim(), grid } }));
+      return unplaced;
+    },
+    updateClass: (originalName, value) => {
+      const record = classSchema.parse(value);
+      if (!classes.some((item) => item.name === originalName)) throw new Error("Classe inconnue.");
+      ensureUniqueName(classes.filter((item) => item.name !== originalName), record.name);
+      setClasses((previous) => previous.map((item) => item.name === originalName ? record : item));
+      setTeachers((previous) => previous.map((teacher) => {
+        const list = teacher.classes.map((name) => name === originalName ? record.name : name);
+        return { ...teacher, classes: teacher.name === record.mainTeacher ? [...new Set([...list, record.name])] : list };
+      }));
+      if (record.name !== originalName) setSchedules((previous) => {
+        const { [originalName]: moved, ...rest } = previous;
+        return moved ? { ...rest, [record.name]: moved } : rest;
+      });
     },
     setLesson: (className, day, slot, lesson) => {
       const start = courseSlots(settings.duration, settings.coursesPerDay)[slot];
