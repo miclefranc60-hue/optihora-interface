@@ -39,12 +39,13 @@ function RecordsPage() {
               <th className="p-4 font-medium">Matière</th>
               <th className="p-4 font-medium">Classes</th>
               <th className="p-4 font-medium">Classe en cours</th>
+              <th className="p-4 font-medium"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
             {teachers.map((t) => {
               const s = subjectById(t.subject);
-              const activeClasses = now ? currentTeacherClasses(schedules, t.name, now, settings.duration) : [];
+               const activeClasses = now ? currentTeacherClasses(schedules, t.name, now, settings.duration, settings) : [];
               return (
                 <tr key={t.name} className="border-b last:border-0 hover:bg-muted/50">
                   <td className="p-4 font-semibold">{t.name}</td>
@@ -55,6 +56,7 @@ function RecordsPage() {
                   <td className={`p-4 ${activeClasses.length ? "font-medium text-primary" : "text-muted-foreground"}`}>
                     {now ? activeClasses.join(", ") || "Libre" : "—"}
                   </td>
+                   <td className="p-4"><AddRecordDialog kind="teacher" editing={t} /></td>
                 </tr>
               );
             })}

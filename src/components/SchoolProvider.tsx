@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { classSchema, teacherSchema, roomSchema, ensureUniqueName, type SchoolClass, type Teacher, type Room } from "@/lib/school-records";
+import { classSchema, teacherSchema, roomSchema, ensureUniqueName, editTeacherRecords, type SchoolClass, type Teacher, type Room } from "@/lib/school-records";
 import { subjects as initialSubjects, type Subject, type Lesson } from "@/lib/data";
 import { createSubject, findSubject } from "@/lib/subjects";
 import { generateTimetable } from "@/lib/generator";
 import { emptyTimetable, updateScheduleLesson, type Schedule } from "@/lib/timetable";
-import { defaultSettings, settingsSchema, unavailabilitySchema, teacherUnavailable, courseSlots, type SchoolSettings, type Unavailability } from "@/lib/settings";
+import { defaultSettings, settingsSchema, unavailabilitySchema, teacherUnavailable, dayCourseSlots, type SchoolSettings, type Unavailability } from "@/lib/settings";
 
 type SchoolState = {
   classes: SchoolClass[]; teachers: Teacher[]; rooms: Room[];
@@ -13,6 +13,7 @@ type SchoolState = {
   updateClass: (originalName: string, value: SchoolClass) => void;
   generateSchedule: (className: string, name: string, hours: Record<string, number>) => Record<string, number>;
   addTeacher: (value: Teacher) => void;
+  updateTeacher: (originalName: string, value: Teacher) => void;
   addRoom: (value: Room) => void;
   schedules: Record<string, Schedule>;
   createSchedule: (className: string, name: string) => void;
@@ -116,7 +117,7 @@ export function SchoolProvider({ children, userId, email }: { children: ReactNod
       });
     },
     setLesson: (className, day, slot, lesson) => {
-      const start = courseSlots(settings.duration, settings.coursesPerDay)[slot];
+      const start = dayCourseSlots(settings, day)[slot];
       if (!start || day < 0 || day > 4) throw new Error("Créneau invalide.");
       if (lesson && !settings.includedSubjects.includes(lesson.subject)) throw new Error("Cette matière n’est pas incluse.");
       if (lesson && teacherUnavailable(constraints, lesson.teacher, day, start, settings.duration)) throw new Error("Cet enseignant est indisponible sur ce créneau.");
@@ -133,6 +134,13 @@ export function SchoolProvider({ children, userId, email }: { children: ReactNod
       if (!subjects.some((subject) => subject.id === record.subject)) throw new Error("Matière inconnue.");
       ensureUniqueName(teachers, record.name);
       setTeachers((previous) => [...previous, record]);
+    },
+    updateTeacher: (originalName, value) => {
+      const record = teacherSchema.parse(value);
+      if (!subjects.some((subject) => subject.id === record.subject)) throw new Error("Matière inconnue.");
+      if (record.classes.some((name) => !classes.some((item) => item.name === name))) throw new Error("Classe inconnue.");
+      const updated = editTeacherRecords({ teachers, classes, constraints, schedules }, originalName, record);
+      setTeachers(updated.teachers); setClasses(updated.classes); setConstraints(updated.constraints); setSchedules(updated.schedules);
     },
     addRoom: (value) => {
       const record = roomSchema.parse(value);

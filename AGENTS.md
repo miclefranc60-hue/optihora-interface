@@ -17,6 +17,7 @@
 
 - Keep institution settings and weekly teacher unavailability in the shared session provider; validate lesson saves centrally and flag existing conflicts without silently deleting lessons.
 - Apply the institution's simultaneous-teaching permission in the shared schedule update function and its conflict lookup used by lesson forms and warnings; disabling permission flags existing lessons without deleting them, and common slot indexes represent non-overlapping institution-wide intervals.
-- Preserve eight slot indexes when changing duration or courses per day (shorter days only hide trailing indexes); recalculate starts from 08:00, with afternoon starting no earlier than 13:30 and a minimum one-hour lunch break, so existing grids remain aligned.
+- Preserve eight stored slot indexes; derive each weekday’s visible non-overlapping slots centrally from its configurable start/end and optional lunch interval, falling back to legacy hours until personalized. All views, generation and validation use the same weekday slots so existing grids stay aligned.
+- Teacher edits use the shared record dialog and a pure reference update to rename schedule lessons, principal-teacher links and unavailability together; subject changes preserve existing lessons and flag mismatches for review.
 
 - Keep predefined and custom subjects in the shared session catalog; all selectors and display lookups use that catalog, and validate referenced IDs against it at provider actions.

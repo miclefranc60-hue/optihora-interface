@@ -1,5 +1,5 @@
 import { days, slots, type Lesson } from "@/lib/data";
-import { courseSlots, minutesOf, timeAt } from "@/lib/settings";
+import { courseSlots, dayCourseSlots, minutesOf, timeAt, type SchoolSettings } from "@/lib/settings";
 
 export type Schedule = { name: string; grid: Lesson[][] };
 export function teacherScheduleConflicts(schedules: Record<string, Schedule>, className: string, teacher: string, day: number, slot: number, allowSimultaneousLessons = false): string[] {
@@ -23,9 +23,9 @@ export function parisTime(date: Date) {
   const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
   return { day: ["Mon", "Tue", "Wed", "Thu", "Fri"].indexOf(part("weekday")), minutes: Number(part("hour")) * 60 + Number(part("minute")) };
 }
-export function currentLesson(grid: Lesson[][], date: Date, duration = 60) {
+export function currentLesson(grid: Lesson[][], date: Date, duration = 60, settings?: SchoolSettings) {
   const { day, minutes } = parisTime(date);
-  const starts = courseSlots(duration);
+  const starts = settings ? dayCourseSlots(settings, day) : courseSlots(duration);
   const index = starts.findIndex((slot) => {
     const [hour = 0, minute = 0] = slot.split(":").map(Number);
     const start = hour * 60 + minute;
@@ -39,8 +39,8 @@ export function currentLesson(grid: Lesson[][], date: Date, duration = 60) {
 export function slotEnd(slot: string, duration = 60) {
   return timeAt(minutesOf(slot) + duration);
 }
-export function currentTeacherClasses(schedules: Record<string, Schedule>, teacher: string, date: Date, duration = 60): string[] {
+export function currentTeacherClasses(schedules: Record<string, Schedule>, teacher: string, date: Date, duration = 60, settings?: SchoolSettings): string[] {
   return Object.entries(schedules)
-    .filter(([, schedule]) => currentLesson(schedule.grid, date, duration)?.teacher === teacher)
+    .filter(([, schedule]) => currentLesson(schedule.grid, date, duration, settings)?.teacher === teacher)
     .map(([className]) => className);
 }
