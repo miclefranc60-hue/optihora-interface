@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { useSchool } from "@/components/SchoolProvider";
-import { classSchema, teacherSchema, roomSchema, type SchoolClass } from "@/lib/school-records";
+import { classSchema, teacherSchema, roomSchema, type SchoolClass, type Teacher } from "@/lib/school-records";
 
 type Kind = "class" | "teacher" | "room";
 const titles = { class: "Ajouter une classe", teacher: "Ajouter un enseignant", room: "Ajouter une salle" };
@@ -17,7 +17,7 @@ function Choice({ id, value, onChange, items }: { id: string; value: string; onC
 function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
   return <div className="space-y-2"><Label htmlFor={id}>{label}</Label>{children}</div>;
 }
-export function AddRecordDialog({ kind, editing }: { kind: Kind; editing?: SchoolClass }) {
+export function AddRecordDialog({ kind, editing }: { kind: Kind; editing?: SchoolClass | Teacher }) {
   const school = useSchool();
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -38,22 +38,29 @@ export function AddRecordDialog({ kind, editing }: { kind: Kind; editing?: Schoo
     if (next) {
       setName(""); setLevel("Collège"); setStudents("26"); setHours(kind === "teacher" ? "18" : "26");
       setMainTeacher("none"); setSubject("math"); setSelectedClasses([]); setRoomType("Salle de cours"); setCapacity("30"); setSuccess("");
-      if (editing) { setName(editing.name); setLevel(editing.level); setStudents(String(editing.students)); setHours(String(editing.hours)); setMainTeacher(editing.mainTeacher || "none"); }
+      if (editing) {
+        setName(editing.name); setHours(String(editing.hours));
+        if ("level" in editing) { setLevel(editing.level); setStudents(String(editing.students)); setMainTeacher(editing.mainTeacher || "none"); }
+        if ("subject" in editing) { setSubject(editing.subject); setSelectedClasses(editing.classes); }
+      }
     }
   }
   return <div className="flex flex-col items-end gap-2">
     <Dialog open={open} onOpenChange={changeOpen}>
-      <DialogTrigger asChild>{editing ? <Button variant="outline" size="sm" aria-label={`Modifier la classe ${editing.name}`}><Pencil />Modifier</Button> : <Button size="lg" className="px-4"><Plus />{titles[kind]}</Button>}</DialogTrigger>
+      <DialogTrigger asChild>{editing ? <Button variant="outline" size="sm" aria-label={`Modifier ${kind === "teacher" ? "l’enseignant" : "la classe"} ${editing.name}`}><Pencil />Modifier</Button> : <Button size="lg" className="px-4"><Plus />{titles[kind]}</Button>}</DialogTrigger>
       <DialogContent className="max-h-[90dvh] w-[calc(100%-2rem)] overflow-y-auto rounded-lg" aria-describedby={`${id}-description`}>
-        <DialogHeader><DialogTitle>{editing ? `Modifier la classe ${editing.name}` : titles[kind]}</DialogTitle><DialogDescription id={`${id}-description`} className="sr-only">Renseignements de {kind === "class" ? "la classe" : kind === "teacher" ? "l’enseignant" : "la salle"}</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>{editing ? `Modifier ${kind === "teacher" ? "l’enseignant" : "la classe"} ${editing.name}` : titles[kind]}</DialogTitle><DialogDescription id={`${id}-description`} className="sr-only">Renseignements de {kind === "class" ? "la classe" : kind === "teacher" ? "l’enseignant" : "la salle"}</DialogDescription></DialogHeader>
         <form className="space-y-5" onSubmit={(event) => {
           event.preventDefault(); setError("");
           try {
             if (kind === "class" && editing) school.updateClass(editing.name, classSchema.parse({ name, level, students, hours, mainTeacher: mainTeacher === "none" ? "" : mainTeacher }));
             else if (kind === "class") school.addClass(classSchema.parse({ name, level, students, hours, mainTeacher: mainTeacher === "none" ? "" : mainTeacher }));
-            if (kind === "teacher") school.addTeacher(teacherSchema.parse({ name, subject, hours, classes: selectedClasses }));
+            if (kind === "teacher") {
+              const record = teacherSchema.parse({ name, subject, hours, classes: selectedClasses });
+              if (editing) school.updateTeacher(editing.name, record); else school.addTeacher(record);
+            }
             if (kind === "room") school.addRoom(roomSchema.parse({ name, type: roomType, capacity }));
-            setOpen(false); setSuccess(editing ? `${name.trim()} modifiée.` : `${name.trim()} ajouté${kind === "teacher" ? "" : "e"}.`);
+            setOpen(false); setSuccess(editing ? `${name.trim()} modifié${kind === "teacher" ? "" : "e"}.` : `${name.trim()} ajouté${kind === "teacher" ? "" : "e"}.`);
           } catch (cause) { setError(cause instanceof Error && !cause.message.startsWith("[") ? cause.message : "Vérifiez les renseignements saisis."); }
         }}>
           <Field id={`${id}-name`} label={kind === "class" ? "Nom de la classe" : kind === "teacher" ? "Nom de l’enseignant" : "Nom de la salle"}><Input id={`${id}-name`} required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} placeholder={kind === "class" ? "Ex. : 6eB" : kind === "teacher" ? "Ex. : Mme Martin" : "Ex. : A103"} /></Field>

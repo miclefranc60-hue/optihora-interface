@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { useSchool } from "@/components/SchoolProvider";
 import { days, type Lesson } from "@/lib/data";
-import { courseSlots, teacherUnavailable } from "@/lib/settings";
+import { dayCourseSlots, teacherUnavailable } from "@/lib/settings";
 import { teacherScheduleConflicts } from "@/lib/timetable";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 export function LessonDialog({ className, day, slot, lesson, close }: { className: string; day: number; slot: number; lesson: Lesson; close: () => void }) {
   const { teachers, rooms, setLesson, settings, constraints, subjects, schedules } = useSchool();
-  const slots = courseSlots(settings.duration, settings.coursesPerDay);
+  const slots = dayCourseSlots(settings, day);
   const included = subjects.filter((subject) => settings.includedSubjects.includes(subject.id));
   const [subject, setSubject] = useState(lesson?.subject ?? included[0]?.id ?? "");
   const [teacher, setTeacher] = useState(lesson?.teacher ?? "");
