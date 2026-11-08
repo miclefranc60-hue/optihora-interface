@@ -1,7 +1,7 @@
 # Roadmap
-- [ ] Modifier les enseignants en conservant leurs références et contraintes
-- [ ] Personnaliser les horaires par journée et les appliquer aux emplois du temps
-- [ ] Vérifier les modifications, leur sauvegarde et les règles horaires
+- [x] Modifier les enseignants en conservant leurs références et contraintes
+- [x] Personnaliser les horaires par journée et les appliquer aux emplois du temps
+- [x] Vérifier les modifications, leur sauvegarde et les règles horaires
 - [x] Interface OptiHora : onglets Tableau de bord, Emploi du temps, Classes, Enseignants, Salles
 - [x] Formulaires d’ajout de classes, enseignants et salles, partagés entre les onglets pendant la session
 - [x] Tableau de bord avec cours actuels par classe
