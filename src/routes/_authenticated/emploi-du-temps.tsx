@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { days } from "@/lib/data";
-import { courseSlots, teacherUnavailable } from "@/lib/settings";
+import { dayCourseSlots, teacherUnavailable } from "@/lib/settings";
 
 import { useSchool } from "@/components/SchoolProvider";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,9 @@ export const Route = createFileRoute("/_authenticated/emploi-du-temps")({
 });
 
 function Timetable() {
-  const { classes, schedules, settings, constraints, subjectById } = useSchool();
-  const slots = courseSlots(settings.duration, settings.coursesPerDay);
+  const { classes, schedules, settings, constraints, subjectById, teachers } = useSchool();
+  const starts = days.map((_, day) => dayCourseSlots(settings, day));
+  const slotCount = Math.max(0, ...starts.map((list) => list.length));
   const { classe } = Route.useSearch();
   const navigate = useNavigate();
   const cls = classes.some((item) => item.name === classe) ? classe : classes[0]?.name ?? "";
@@ -66,14 +67,15 @@ function Timetable() {
             </tr>
           </thead>
           <tbody>
-            {slots.map((slot, s) => (
-              <tr key={slot}>
-                <td className="border-b p-3 align-top text-xs font-medium text-muted-foreground">{slot}</td>
+            {Array.from({ length: slotCount }, (_, s) => (
+              <tr key={s}>
+                <td className="border-b p-3 align-top text-xs font-medium text-muted-foreground">{s + 1}</td>
                 {days.map((d, di) => {
+                  const slot = starts[di]?.[s];
                   const l = grid[di]?.[s];
                   return (
                     <td key={d} className="h-20 border-b border-l p-1.5 align-top">
-                      {l ? (
+                      {!slot ? <span className="text-xs text-muted-foreground">—</span> : l ? (
                         <Button
                           variant="ghost"
                           onClick={() => setEditing({ day: di, slot: s })}
@@ -81,12 +83,13 @@ function Timetable() {
                           className="h-full w-full flex-col items-start justify-start whitespace-normal rounded-lg border-l-4 p-2 text-left"
                           style={{ borderColor: subjectById(l.subject).color, background: `color-mix(in oklab, ${subjectById(l.subject).color} 14%, transparent)` }}
                         >
+                          <p className="text-xs text-muted-foreground">{slot}</p>
                           <p className="font-semibold">{subjectById(l.subject).name}</p>
                           <p className="text-xs text-muted-foreground">{l.teacher} · {l.room}</p>
-                          {(teacherUnavailable(constraints, l.teacher, di, slot, settings.duration) || !settings.includedSubjects.includes(l.subject) || teacherScheduleConflicts(schedules, cls, l.teacher, di, s, settings.allowSimultaneousLessons).length > 0) && <p className="text-xs text-destructive">À revoir</p>}
+                          {(teachers.find((teacher) => teacher.name === l.teacher)?.subject !== l.subject || teacherUnavailable(constraints, l.teacher, di, slot, settings.duration) || !settings.includedSubjects.includes(l.subject) || teacherScheduleConflicts(schedules, cls, l.teacher, di, s, settings.allowSimultaneousLessons).length > 0) && <p className="text-xs text-destructive">À revoir</p>}
                         </Button>
                       ) : (
-                        <Button variant="ghost" disabled={!schedule} onClick={() => setEditing({ day: di, slot: s })} aria-label={`Ajouter un cours ${d} à ${slot}`} className="h-full w-full border border-dashed text-muted-foreground"><Plus /></Button>
+                        <Button variant="ghost" disabled={!schedule} onClick={() => setEditing({ day: di, slot: s })} aria-label={`Ajouter un cours ${d} à ${slot}`} className="h-full w-full border border-dashed text-muted-foreground"><span className="text-xs">{slot}</span><Plus /></Button>
                       )}
                     </td>
                   );
