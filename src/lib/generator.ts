@@ -1,6 +1,6 @@
 import type { Lesson } from "@/lib/data";
 import type { Room, Teacher } from "@/lib/school-records";
-import { courseSlots, teacherUnavailable, type SchoolSettings, type Unavailability } from "@/lib/settings";
+import { dayCourseSlots, teacherUnavailable, type SchoolSettings, type Unavailability } from "@/lib/settings";
 import { emptyTimetable, type Schedule } from "@/lib/timetable";
 
 export const MAX_PER_DAY = 2;
@@ -13,29 +13,31 @@ type Input = {
 export function generateTimetable({ className, hours, settings, teachers, rooms, constraints, schedules, random = Math.random }: Input) {
   const grid = emptyTimetable();
   const remaining: Record<string, number> = Object.fromEntries(Object.entries(hours).filter(([, value]) => value > 0));
-  const starts = courseSlots(settings.duration, settings.coursesPerDay);
   const others = Object.entries(schedules).filter(([name]) => name !== className).map(([, schedule]) => schedule.grid);
   const days = grid.length;
   for (let day = 0; day < days; day++) {
+    const starts = dayCourseSlots(settings, day);
     const left = Object.values(remaining).reduce((sum, value) => sum + value, 0);
     const target = Math.min(starts.length, Math.ceil(left / (days - day)));
-    const row = grid[day]!;
+    const row = grid[day];
+    if (!row) continue;
     const perDay: Record<string, number> = {};
     let placed = 0;
     for (let slot = 0; slot < starts.length && placed < target; slot++) {
-      const start = starts[slot]!;
+      const start = starts[slot];
+      if (!start) continue;
       const previous = row[slot - 1]?.subject;
-      const candidates = Object.keys(remaining).filter((subject) => remaining[subject]! > 0 && (perDay[subject] ?? 0) < MAX_PER_DAY)
+      const candidates = Object.keys(remaining).filter((subject) => (remaining[subject] ?? 0) > 0 && (perDay[subject] ?? 0) < MAX_PER_DAY)
         .map((subject) => ({ subject, teacher: pickTeacher(subject) }))
         .filter((item): item is { subject: string; teacher: string } => Boolean(item.teacher))
-        .map((item) => ({ ...item, score: remaining[item.subject]! + random() * 2 - (item.subject === previous ? 3 : 0) }))
+        .map((item) => ({ ...item, score: (remaining[item.subject] ?? 0) + random() * 2 - (item.subject === previous ? 3 : 0) }))
         .sort((a, b) => b.score - a.score);
       const choice = candidates[0];
       if (!choice) continue;
       const usedRooms = new Set(others.map((other) => other[day]?.[slot]?.room).filter(Boolean));
       const room = rooms.find((item) => !usedRooms.has(item.name))?.name ?? "";
       row[slot] = { subject: choice.subject, teacher: choice.teacher, room } satisfies Lesson;
-      remaining[choice.subject]!--; perDay[choice.subject] = (perDay[choice.subject] ?? 0) + 1; placed++;
+      remaining[choice.subject] = (remaining[choice.subject] ?? 0) - 1; perDay[choice.subject] = (perDay[choice.subject] ?? 0) + 1; placed++;
 
       function pickTeacher(subject: string) {
         const free = teachers.filter((teacher) => teacher.subject === subject
