@@ -28,7 +28,7 @@ export function generateTimetable({ className, hours, settings, teachers, rooms,
       if (!start) continue;
       const previous = row[slot - 1]?.subject;
       const candidates = Object.keys(remaining).filter((subject) => (remaining[subject] ?? 0) > 0 && (perDay[subject] ?? 0) < MAX_PER_DAY)
-        .map((subject) => ({ subject, teacher: pickTeacher(subject) }))
+        .map((subject) => ({ subject, teacher: pickTeacher(subject, start) }))
         .filter((item): item is { subject: string; teacher: string } => Boolean(item.teacher))
         .map((item) => ({ ...item, score: (remaining[item.subject] ?? 0) + random() * 2 - (item.subject === previous ? 3 : 0) }))
         .sort((a, b) => b.score - a.score);
@@ -39,7 +39,7 @@ export function generateTimetable({ className, hours, settings, teachers, rooms,
       row[slot] = { subject: choice.subject, teacher: choice.teacher, room } satisfies Lesson;
       remaining[choice.subject] = (remaining[choice.subject] ?? 0) - 1; perDay[choice.subject] = (perDay[choice.subject] ?? 0) + 1; placed++;
 
-      function pickTeacher(subject: string) {
+      function pickTeacher(subject: string, start: string) {
         const free = teachers.filter((teacher) => teacher.subject === subject
           && !teacherUnavailable(constraints, teacher.name, day, start, settings.duration)
           && (settings.allowSimultaneousLessons || !others.some((other) => other[day]?.[slot]?.teacher === teacher.name)));
