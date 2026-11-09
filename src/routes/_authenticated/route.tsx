@@ -1,6 +1,8 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { SchoolProvider } from "@/components/SchoolProvider";
+import { OptiProvider } from "@/components/OptiProvider";
+import { OptiAssistant } from "@/components/OptiAssistant";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -14,5 +16,5 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
-  return <SchoolProvider key={user.id} userId={user.id} email={user.email ?? ""}><Outlet /></SchoolProvider>;
+  return <OptiProvider key={user.id}><SchoolProvider userId={user.id} email={user.email ?? ""}><Outlet /><OptiAssistant /></SchoolProvider></OptiProvider>;
 }
