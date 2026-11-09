@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/components/SchoolProvider";
 import type { ReactNode } from "react";
+import { optiImage } from "@/lib/opti-assets";
 
 const tabs = [
   { to: "/", label: "Tableau de bord", icon: "◧" },
@@ -20,7 +21,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 shrink-0 flex-col border-r bg-sidebar p-5 md:flex">
         <div className="mb-10 flex items-center gap-2.5">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary font-display text-lg font-bold text-primary-foreground">O</div>
+          <img src={optiImage("welcome", true).url} alt="Opti" className="size-11 object-contain" />
           <span className="font-display text-xl font-bold tracking-tight">OptiHora</span>
         </div>
         <nav className="flex flex-col gap-1">

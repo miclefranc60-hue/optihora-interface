@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { useSchool } from "@/components/SchoolProvider";
+import { useOpti } from "@/components/OptiProvider";
 import { classSchema, teacherSchema, roomSchema, type SchoolClass, type Teacher } from "@/lib/school-records";
 
 type Kind = "class" | "teacher" | "room";
@@ -19,6 +20,7 @@ function Field({ id, label, children }: { id: string; label: string; children: R
 }
 export function AddRecordDialog({ kind, editing }: { kind: Kind; editing?: SchoolClass | Teacher }) {
   const school = useSchool();
+  const { react } = useOpti();
   const id = useId();
   const [open, setOpen] = useState(false);
   const [success, setSuccess] = useState("");
@@ -61,7 +63,7 @@ export function AddRecordDialog({ kind, editing }: { kind: Kind; editing?: Schoo
             }
             if (kind === "room") school.addRoom(roomSchema.parse({ name, type: roomType, capacity }));
             setOpen(false); setSuccess(editing ? `${name.trim()} modifié${kind === "teacher" ? "" : "e"}.` : `${name.trim()} ajouté${kind === "teacher" ? "" : "e"}.`);
-          } catch (cause) { setError(cause instanceof Error && !cause.message.startsWith("[") ? cause.message : "Vérifiez les renseignements saisis."); }
+          } catch (cause) { setError(cause instanceof Error && !cause.message.startsWith("[") ? cause.message : "Vérifiez les renseignements saisis."); react("error", "Un renseignement est à vérifier. Je suis là si vous avez besoin d’aide."); }
         }}>
           <Field id={`${id}-name`} label={kind === "class" ? "Nom de la classe" : kind === "teacher" ? "Nom de l’enseignant" : "Nom de la salle"}><Input id={`${id}-name`} required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} placeholder={kind === "class" ? "Ex. : 6eB" : kind === "teacher" ? "Ex. : Mme Martin" : "Ex. : A103"} /></Field>
           {kind === "class" && <>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useSchool } from "@/components/SchoolProvider";
+import { useOpti } from "@/components/OptiProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 
 export function NewScheduleDialog() {
+  const { react } = useOpti();
   const { classes, schedules, generateSchedule, settings, subjects, teachers } = useSchool();
   const included = subjects.filter((subject) => settings.includedSubjects.includes(subject.id));
   const [hours, setHours] = useState<Record<string, string>>({});
@@ -29,11 +31,14 @@ export function NewScheduleDialog() {
       <form className="space-y-5" onSubmit={(event) => {
         event.preventDefault();
         if (!className || !name.trim() || (existing && !replace)) return;
+        try {
         const unplaced = generateSchedule(className, name, Object.fromEntries(included.map((subject) => [subject.id, Math.max(0, Math.floor(Number(hours[subject.id]) || 0))])));
         const missing = Object.entries(unplaced).map(([id, count]) => `${included.find((subject) => subject.id === id)?.name ?? id} : ${count} h`);
         setResult(missing.length ? `Heures non placées (enseignant indisponible ou limite de 2 h par jour) — ${missing.join(", ")}` : "");
+        react(missing.length ? "question" : "success", missing.length ? "La grille est créée, mais certaines heures restent à placer." : "Votre emploi du temps est prêt !");
         if (!missing.length) setOpen(false);
         void navigate({ to: "/emploi-du-temps", search: { classe: className } });
+        } catch (error) { setResult(error instanceof Error ? error.message : "Impossible de générer cet emploi du temps."); react("error", "Cet emploi du temps nécessite une vérification."); }
       }}>
         <div className="space-y-2"><Label htmlFor="schedule-class">Classe</Label><Select value={className} onValueChange={(value) => { setClassName(value); setReplace(false); }}><SelectTrigger id="schedule-class"><SelectValue placeholder="Choisir une classe" /></SelectTrigger><SelectContent>{classes.map((item) => <SelectItem key={item.name} value={item.name}>{item.name}</SelectItem>)}</SelectContent></Select></div>
         <div className="space-y-2"><Label htmlFor="schedule-name">Nom de l’emploi du temps</Label><Input id="schedule-name" required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex. : Semaine habituelle" /></div>

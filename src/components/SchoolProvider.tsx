@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { useOpti } from "@/components/OptiProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { classSchema, teacherSchema, roomSchema, ensureUniqueName, editTeacherRecords, type SchoolClass, type Teacher, type Room } from "@/lib/school-records";
 import { subjects as initialSubjects, type Subject, type Lesson } from "@/lib/data";
@@ -33,6 +34,8 @@ type SchoolState = {
 const SchoolContext = createContext<SchoolState | null>(null);
 export type Establishment = { name: string; type: string; city: string; email: string };
 export function SchoolProvider({ children, userId, email }: { children: ReactNode; userId: string; email: string }) {
+  const { react } = useOpti();
+  const previousSave = useRef("");
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -66,12 +69,19 @@ export function SchoolProvider({ children, userId, email }: { children: ReactNod
   }, [userId, email]);
   useEffect(() => {
     if (!loaded) return;
+    const snapshot = JSON.stringify({ establishment, classes, teachers, rooms, subjects, settings, constraints, schedules });
+    if (!previousSave.current) { previousSave.current = snapshot; return; }
+    if (previousSave.current === snapshot) return;
     const timer = setTimeout(() => {
       const data = JSON.parse(JSON.stringify({ classes, teachers, rooms, subjects, settings, constraints, schedules }));
-      supabase.from("profiles").upsert({ id: userId, name: establishment.name, type: establishment.type, city: establishment.city, data, updated_at: new Date().toISOString() }).then(({ error }) => setSaveError(!!error));
+      supabase.from("profiles").upsert({ id: userId, name: establishment.name, type: establishment.type, city: establishment.city, data, updated_at: new Date().toISOString() }).then(({ error }) => {
+        setSaveError(!!error);
+        if (error) react("error", "La sauvegarde a échoué. Vos modifications ne sont pas encore enregistrées.");
+        else { previousSave.current = snapshot; react("flying", "Vos modifications sont sauvegardées !"); }
+      });
     }, 600);
     return () => clearTimeout(timer);
-  }, [loaded, userId, establishment, classes, teachers, rooms, subjects, settings, constraints, schedules]);
+  }, [loaded, userId, establishment, classes, teachers, rooms, subjects, settings, constraints, schedules, react]);
   if (!loaded) return <div className="grid min-h-screen place-items-center text-muted-foreground">Chargement de votre établissement…</div>;
   return <SchoolContext.Provider value={{ establishment, saveError, saveEstablishment: (value) => setEstablishment((previous) => ({ ...previous, ...value })), classes, teachers, rooms, schedules, settings, constraints, subjects,
     subjectById: (id) => findSubject(subjects, id),
