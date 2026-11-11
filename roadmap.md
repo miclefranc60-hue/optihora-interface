@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Fluidifier les changements d’humeur et enchaîner envol, atterrissage et retour au repos
 - [ ] Intégrer le catalogue des images, humeurs et animations originales d’Opti
 - [ ] Ajouter un assistant Opti avec réponses adaptées à l’établissement et réactions visuelles
 - [ ] Animer Opti lors des actions et vérifier l’expérience sur ordinateur et téléphone

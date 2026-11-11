@@ -8,6 +8,7 @@ import { useSchool } from "@/components/SchoolProvider";
 import { useOpti } from "@/components/OptiProvider";
 import { optiCatalog, optiImage, type OptiMood } from "@/lib/opti-assets";
 import { askOpti } from "@/lib/opti.functions";
+import { OptiSprite } from "@/components/OptiSprite";
 import type { z } from "zod";
 import type { optiReplySchema } from "@/lib/opti-assistant";
 
@@ -26,6 +27,7 @@ export function OptiAssistant() {
   const [error, setError] = useState("");
   const [mood, setMood] = useState<OptiMood>("welcome");
   const [reduced, setReduced] = useState(false);
+  const [landing, setLanding] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
@@ -37,8 +39,14 @@ export function OptiAssistant() {
   }, []);
   useEffect(() => { bottom.current?.scrollIntoView({ behavior: reduced ? "instant" : "smooth", block: "nearest" }); }, [messages, pending, open, reduced]);
   useEffect(() => { if (open && !gallery) field.current?.focus(); }, [open, gallery]);
+  useEffect(() => {
+    setLanding(false);
+    if (activity?.mood !== "flying" || reduced) return;
+    const timer = setTimeout(() => setLanding(true), 2400);
+    return () => clearTimeout(timer);
+  }, [activity, reduced]);
   const currentMood = pending ? "thinking" : activity?.mood ?? mood;
-  const image = optiImage(currentMood, reduced);
+  const image = landing && currentMood === "flying" ? optiCatalog.find((asset) => asset.id === 43) ?? optiImage(currentMood, reduced) : optiImage(currentMood, reduced);
   async function send(question = input) {
     if (pending || !question.trim()) return;
     const next: Message[] = [...messages, { role: "user", content: question.trim() }];
@@ -55,7 +63,7 @@ export function OptiAssistant() {
   return <div className="opti-dock">
     {open && <section role="dialog" aria-label="Assistant Opti" className="opti-panel flex flex-col overflow-hidden rounded-lg border bg-card shadow-soft">
       <header className="flex shrink-0 items-center gap-3 border-b bg-accent/40 p-4">
-        <img src={image.url} alt={`Opti · ${currentMood}`} className="size-16 object-contain" />
+        <OptiSprite src={image.url} alt={`Opti · ${currentMood}`} className="size-16" reduced={reduced} />
         <div className="min-w-0 flex-1"><h2 className="font-display text-lg font-semibold">Opti</h2><p className="text-xs text-muted-foreground">Votre compagnon OptiHora</p></div>
         <Button variant="ghost" size="icon" title={gallery ? "Conversation" : "Les visages d’Opti"} aria-label={gallery ? "Conversation" : "Les visages d’Opti"} onClick={() => setGallery(!gallery)}>{gallery ? <MessageCircle /> : <Images />}</Button>
         <Button variant="ghost" size="icon" title="Nouvelle conversation" aria-label="Nouvelle conversation" disabled={pending} onClick={() => { setMessages([welcome]); setMood("welcome"); setError(""); setInput(""); }}><RotateCcw /></Button>
@@ -72,6 +80,6 @@ export function OptiAssistant() {
       </>}
     </section>}
     {!open && activity && <p role="status" className="mb-2 max-w-72 rounded-lg border bg-card px-3 py-2 text-sm shadow-soft">{activity.message}</p>}
-    <Button aria-label={open ? "Fermer l’assistant Opti" : "Ouvrir l’assistant Opti"} aria-expanded={open} variant="ghost" className={`opti-launcher ml-auto flex h-auto items-center gap-1 p-0 hover:bg-transparent ${activity?.mood === "flying" ? "opti-flight" : ""}`} onClick={() => setOpen(!open)}><img src={image.url} alt="Opti" className="size-24 object-contain" /><span className="rounded-md border bg-card px-3 py-2 text-sm font-semibold shadow-soft">Opti <MessageCircle className="ml-1 inline size-4" /></span></Button>
+    <Button aria-label={open ? "Fermer l’assistant Opti" : "Ouvrir l’assistant Opti"} aria-expanded={open} variant="ghost" className="opti-launcher ml-auto flex h-auto items-center gap-1 p-0 hover:bg-transparent" onClick={() => setOpen(!open)}><span className={activity?.mood === "flying" ? "opti-flight" : ""}><OptiSprite src={image.url} alt="Opti" className="size-24" reduced={reduced} /></span><span className="rounded-md border bg-card px-3 py-2 text-sm font-semibold shadow-soft">Opti <MessageCircle className="ml-1 inline size-4" /></span></Button>
   </div>;
 }
