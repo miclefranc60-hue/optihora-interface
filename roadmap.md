@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Ajouter des images intermédiaires aux animations originales d’Opti et vérifier leur lecture
+- [x] Ajouter des images intermédiaires aux animations originales d’Opti et vérifier leur lecture
 - [x] Fluidifier les changements d’humeur et enchaîner envol, atterrissage et retour au repos
 - [x] Intégrer le catalogue des images, humeurs et animations originales d’Opti
 - [x] Ajouter un assistant Opti avec réponses adaptées à l’établissement et réactions visuelles
