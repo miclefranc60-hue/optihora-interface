@@ -22,4 +22,5 @@
 
 - Keep predefined and custom subjects in the shared session catalog; all selectors and display lookups use that catalog, and validate referenced IDs against it at provider actions.
 - Mount Opti activity and conversation once in the authenticated layout, scoped to the signed-in account; keep chat ephemeral and outside school persistence. Use the uploaded asset catalog for reactions and still poses for reduced motion.
+- Preload Opti’s next pose before crossfading, and sequence flight into the supplied landing animation; animate only the mascot, not its controls, to keep interactions stable.
 - Opti advice runs through an authenticated server function using the AI Gateway SDK; it can suggest existing pages but cannot mutate school data. Report saved activity only after the school upsert succeeds.

@@ -171,6 +171,10 @@
 .opti-panel { width: min(420px, calc(100vw - 32px)); height: min(640px, calc(100dvh - 140px)); margin-bottom: 8px; }
 .opti-launcher { width: 166px; height: 96px; }
 .opti-flight { animation: opti-flight 2.4s ease-in-out; }
+.opti-sprite-in { animation: opti-sprite-in 320ms ease-out both; }
+.opti-sprite-out { animation: opti-sprite-out 320ms ease-out both; }
+@keyframes opti-sprite-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes opti-sprite-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes opti-flight { 0%, 100% { transform: translate(0, 0); } 35% { transform: translate(-90px, -80px) rotate(-8deg); } 65% { transform: translate(-40px, -110px) rotate(6deg); } }
 @media (max-width: 640px) { .opti-dock { right: 12px; bottom: 12px; } .opti-panel { height: min(620px, calc(100dvh - 124px)); } }
-@media (prefers-reduced-motion: reduce) { .opti-flight { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .opti-flight, .opti-sprite-in, .opti-sprite-out { animation: none; } }

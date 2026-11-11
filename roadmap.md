@@ -1,7 +1,8 @@
 # Roadmap
-- [ ] Intégrer le catalogue des images, humeurs et animations originales d’Opti
-- [ ] Ajouter un assistant Opti avec réponses adaptées à l’établissement et réactions visuelles
-- [ ] Animer Opti lors des actions et vérifier l’expérience sur ordinateur et téléphone
+- [x] Fluidifier les changements d’humeur et enchaîner envol, atterrissage et retour au repos
+- [x] Intégrer le catalogue des images, humeurs et animations originales d’Opti
+- [x] Ajouter un assistant Opti avec réponses adaptées à l’établissement et réactions visuelles
+- [x] Animer Opti lors des actions et vérifier l’expérience sur ordinateur et téléphone
 - [x] Modifier les enseignants en conservant leurs références et contraintes
 - [x] Personnaliser les horaires par journée et les appliquer aux emplois du temps
 - [x] Vérifier les modifications, leur sauvegarde et les règles horaires
