@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Augmenter encore la cadence des 24 animations d’Opti et vérifier leur affichage
+- [x] Augmenter encore la cadence des 24 animations d’Opti et vérifier leur affichage
 - [x] Ajouter des images intermédiaires aux animations originales d’Opti et vérifier leur lecture
 - [x] Fluidifier les changements d’humeur et enchaîner envol, atterrissage et retour au repos
 - [x] Intégrer le catalogue des images, humeurs et animations originales d’Opti
