@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Corriger les à-coups des poses et des boucles d’Opti à partir des animations originales
 - [x] Augmenter encore la cadence des 24 animations d’Opti et vérifier leur affichage
 - [x] Ajouter des images intermédiaires aux animations originales d’Opti et vérifier leur lecture
 - [x] Fluidifier les changements d’humeur et enchaîner envol, atterrissage et retour au repos
