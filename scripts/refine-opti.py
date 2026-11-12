@@ -1,109 +1,109 @@
-"""Rebuild Opti from original GIFs, never from already-interpolated frames.
+"""Rebuild Opti's animations from the original GIFs with RIFE neural interpolation.
 
-Run with Python, Pillow, NumPy and OpenCV installed. Temporary pixels stay
-outside the repository; only immutable Lovable asset pointers are written.
+Optical flow (previous approach) ghosted wings and limbs between distant poses,
+which made the original frames discernible. RIFE synthesises real in-between
+poses. Alpha is recovered by difference matting: each in-between is rendered
+over white and over black, then alpha = 1 - (white - black).
+
+Usage:
+  python scripts/refine-opti.py render 32 33 ...   # writes /tmp/opti-rife/*.webp
+  python scripts/refine-opti.py upload             # writes asset pointers
+Needs Pillow, NumPy, onnxruntime and the RIFE 4.9 ONNX model (downloaded).
 """
 import json
+import os
 import subprocess
-import tempfile
-from concurrent.futures import ThreadPoolExecutor
+import sys
+import urllib.request
 from pathlib import Path
 
-import cv2
 import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/assets/opti/continuous"
-cv2.setNumThreads(1)
+WORK = Path("/tmp/opti-rife")
+MODEL = WORK / "rife49.onnx"
+MODEL_URL = ("https://huggingface.co/yuvraj108c/rife-onnx/resolve/main/"
+             "rife49_ensemble_True_scale_1_sim.onnx")
+FPS = 60
 
 
-def gray(frame):
-    rgba = frame.astype(np.float32) / 255
-    rgb = rgba[:, :, :3] * rgba[:, :, 3:4] + 1 - rgba[:, :, 3:4]
-    return cv2.cvtColor(np.uint8(rgb * 255), cv2.COLOR_RGB2GRAY)
+def session():
+    import onnxruntime as ort
+    if not MODEL.exists():
+        urllib.request.urlretrieve(MODEL_URL, MODEL)
+    opts = ort.SessionOptions()
+    opts.intra_op_num_threads = int(os.environ.get("RIFE_THREADS", "4"))
+    return ort.InferenceSession(str(MODEL), opts, providers=["CPUExecutionProvider"])
 
 
-def warp(frame, flow, fraction, x, y):
-    # Solve the inverse mapping instead of subtracting a forward flow at the
-    # wrong coordinates (which produces periodic jumps around pose boundaries).
-    mx, my = x.copy(), y.copy()
-    for _ in range(5):
-        sampled = cv2.remap(flow, mx, my, cv2.INTER_LINEAR,
-                            borderMode=cv2.BORDER_REPLICATE)
-        mx, my = x - fraction * sampled[:, :, 0], y - fraction * sampled[:, :, 1]
-    rgba = frame.astype(np.float32) / 255
-    rgba[:, :, :3] *= rgba[:, :, 3:4]
-    return cv2.remap(rgba, mx, my, cv2.INTER_LINEAR,
-                     borderMode=cv2.BORDER_CONSTANT)
-
-
-def interpolate(a, b, forward, backward, fraction, x, y):
-    if fraction == 0:
-        return Image.fromarray(a)
-    rgba = (warp(a, forward, fraction, x, y) * (1 - fraction)
-            + warp(b, backward, 1 - fraction, x, y) * fraction)
-    rgba[:, :, :3] = np.divide(rgba[:, :, :3], rgba[:, :, 3:4],
-                                out=np.zeros_like(rgba[:, :, :3]),
-                                where=rgba[:, :, 3:4] > .001)
-    return Image.fromarray(np.uint8(np.clip(rgba * 255, 0, 255)))
-
-
-def refine(identifier, work):
+def render(identifier, rife):
     matches = list((ROOT / "src/assets/opti").glob(f"opti-{identifier}-*.gif.asset.json"))
-    if len(matches) != 1:
-        raise ValueError(f"Expected one original GIF for {identifier}")
-    source = work / f"{identifier}.gif"
-    subprocess.run(["lovable-assets", "get", "--overwrite", "--file",
-                    str(matches[0]), "-o", str(source)], check=True,
-                   stdout=subprocess.DEVNULL)
+    assert len(matches) == 1, identifier
+    source = WORK / f"{identifier}.gif"
+    if not source.exists():
+        subprocess.run(["lovable-assets", "get", "--overwrite", "--file", str(matches[0]),
+                        "-o", str(source)], check=True, stdout=subprocess.DEVNULL)
     image = Image.open(source)
     frames, durations = [], []
     for i in range(image.n_frames):
         image.seek(i)
-        frames.append(np.array(image.convert("RGBA")))
+        frames.append(np.asarray(image.convert("RGBA"), dtype=np.float32) / 255)
         durations.append(image.info["duration"])
     h, w = frames[0].shape[:2]
-    x, y = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
-    dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+    H, W = (h + 63) // 64 * 64, (w + 63) // 64 * 64
+
+    def over(frame, bg):
+        alpha = frame[:, :, 3:]
+        padded = np.full((H, W, 3), bg, np.float32)
+        padded[:h, :w] = frame[:, :, :3] * alpha + bg * (1 - alpha)
+        return padded.transpose(2, 0, 1)[None].copy()
+
+    def between(a, b, t):
+        layers = []
+        for bg in (1.0, 0.0):
+            out = rife.run(None, {"img0": over(a, bg), "img1": over(b, bg),
+                                  "timestep": np.array([t], np.float32)})[0]
+            layers.append(out[0].transpose(1, 2, 0)[:h, :w])
+        white, black = layers
+        alpha = np.clip(1 - (white - black).mean(2, keepdims=True), 0, 1)
+        alpha[alpha < 0.02] = 0
+        color = np.divide(black, alpha, out=np.zeros_like(black), where=alpha > 1e-3)
+        return np.dstack([np.clip(color, 0, 1), alpha])
+
     result, times = [], []
     for i, a in enumerate(frames):
-        # Interpolate the wrap as well: no held last frame followed by a snap.
-        b = frames[(i + 1) % len(frames)]
-        forward = dis.calc(gray(a), gray(b), None)
-        backward = dis.calc(gray(b), gray(a), None)
-        count = max(1, round(durations[i] * 60 / 1000))
+        b = frames[(i + 1) % len(frames)]  # interpolate the loop closure too
+        count = max(1, round(durations[i] * FPS / 1000))
         for j in range(count):
-            result.append(interpolate(a, b, forward, backward, j / count, x, y))
-            times.append(round((j + 1) * durations[i] / count)
-                         - round(j * durations[i] / count))
-    target = work / f"opti-{identifier}-continu.webp"
-    result[0].save(target, save_all=True, append_images=result[1:], duration=times,
-                   loop=image.info.get("loop", 0), quality=88, method=4,
-                   minimize_size=False, kmin=3, kmax=5)
+            result.append(a if j == 0 else between(a, b, j / count))
+            times.append(round((j + 1) * durations[i] / count) - round(j * durations[i] / count))
+    pictures = [Image.fromarray(np.uint8(np.clip(f * 255 + .5, 0, 255))) for f in result]
+    target = WORK / f"opti-{identifier}-continu.webp"
+    pictures[0].save(target, save_all=True, append_images=pictures[1:], duration=times,
+                     loop=image.info.get("loop", 0), quality=90, method=4,
+                     minimize_size=False, kmin=3, kmax=5)
     check = Image.open(target)
-    total = 0
-    for i in range(check.n_frames):
-        check.seek(i)
-        check.load()
-        total += check.info["duration"]
-    assert total == sum(durations), (identifier, total, sum(durations))
-    assert check.size == (w, h)
-    assert check.n_frames > len(frames)
-    assert max(times) <= 20
-    with (OUTPUT / f"opti-{identifier}-continu.webp.asset.json").open("w") as handle:
-        subprocess.run(["lovable-assets", "create", "--file", str(target),
-                        "--filename", target.name], stdout=handle, check=True)
-    stats = {"id": identifier, "original_frames": len(frames),
-             "frames": check.n_frames, "duration_ms": total,
-             "max_frame_ms": max(times), "bytes": target.stat().st_size}
-    print(json.dumps(stats), flush=True)
-    return stats
+    assert check.n_frames == len(pictures) and check.size == (w, h)
+    assert sum(times) == sum(durations) and max(times) <= 20 and min(times) > 10
+    print(json.dumps({"id": identifier, "frames": check.n_frames,
+                      "bytes": target.stat().st_size}), flush=True)
+
+
+def upload():
+    for identifier in range(32, 56):
+        target = WORK / f"opti-{identifier}-continu.webp"
+        with (OUTPUT / f"{target.name}.asset.json").open("w") as handle:
+            subprocess.run(["lovable-assets", "create", "--file", str(target),
+                            "--filename", target.name], stdout=handle, check=True)
 
 
 if __name__ == "__main__":
-    OUTPUT.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="opti-continuous-") as directory:
-        with ThreadPoolExecutor(max_workers=4) as pool:
-            stats = list(pool.map(lambda i: refine(i, Path(directory)), range(32, 56)))
-        print(f"Verified {len(stats)} animations at approximately 60 fps.")
+    WORK.mkdir(parents=True, exist_ok=True)
+    if sys.argv[1] == "render":
+        rife = session()
+        for identifier in sys.argv[2:]:
+            render(int(identifier), rife)
+    else:
+        upload()
